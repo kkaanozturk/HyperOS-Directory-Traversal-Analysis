@@ -1,0 +1,9 @@
+{
+    "theme_name": "HyperOS Default Dark",
+    "version": "1.0",
+    "author": "Xiaomi Design",
+    "colors": {
+        "primary": "#000000",
+        "accent": "#FF4500"
+    }
+}
