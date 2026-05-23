@@ -39,7 +39,7 @@ Zafiyeti test etmek için önce simüle edilmiş sunucuyu ayağa kaldırmanız g
 ```bash
 cd simulated_server
 pip install -r requirements.txt
-python app.py
+python simulated_server.py
 ```
 *Sunucu `http://127.0.0.1:5000` adresinde ayağa kalkacaktır.*
 
@@ -73,11 +73,13 @@ cargo build --release
 
 ## 🔒 Güvenlik Dokümantasyonları
 
-- **[Zafiyet Analizi ve Etki Raporu (Vulnerability Analysis)](docs/vulnerability_analysis.md)**: Zafiyetin kök nedeni, CVSS skorlaması ve olası saldırı senaryoları.
-- **[Çözüm Önerileri (Mitigation)](docs/mitigation.md)**: Güvenli kodlama yöntemleri (Secure Coding) ve zafiyetin kapatılması.
+Daha detaylı analiz ve şemalar için [docs/](docs/README.md) klasörünü inceleyebilirsiniz:
+- **[Mimari Şeması (Architecture)](docs/architecture.md)**: Simüle edilen Flask sunucusunun ve zafiyetli mimarinin şeması.
+- **[Zafiyet Analizi (Analysis)](docs/analysis.md)**: CVE-2025-2844 zafiyetinin derinlemesine analizi ve payload örnekleri.
+- **[Çözüm Önerileri (Mitigation)](docs/mitigation.md)**: Bu zafiyetten korunma yöntemleri ve yama (patch) mantığı.
 
 ---
 
 ## ⚠️ Yasal Uyarı (Disclaimer)
 
-Bu repodaki kodlar ve dökümanlar tamamen **eğitim amaçlı** ve **üniversite final projesi** kapsamında oluşturulmuştur. Buradaki bilgi ve araçların izinsiz sistemlerde kullanılması yasadışıdır. Ortaya çıkabilecek herhangi bir zarardan geliştirici sorumlu tutulamaz. Lütfen siber güvenliği etik kurallar çerçevesinde öğrenin.
+**Yasal Uyarı**: Bu proje yalnızca eğitim ve akademik araştırma amacıyla geliştirilmiştir. Buradaki bilgilerin ve kodların yetkisiz sistemler üzerinde kullanılması yasal sorumluluk doğurabilir. Geliştirici hiçbir sorumluluk kabul etmez.
