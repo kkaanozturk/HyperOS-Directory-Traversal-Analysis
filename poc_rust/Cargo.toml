@@ -1,12 +1,11 @@
 [package]
-name = "poc_rust"
+name = "cve_2025_21082_uaf_poc"
 version = "0.1.0"
 edition = "2021"
 authors = ["CyberSecurity Student"]
-description = "CVE-2025-2844 HyperOS Theme Manager Directory Traversal PoC in Rust"
+description = "CVE-2025-21082 UAF simülasyonu"
 
 [dependencies]
-reqwest = { version = "0.11", features = ["blocking"] }
-clap = { version = "4.4", features = ["derive"] }
 colored = "2.0"
-urlencoding = "2.1"
+clap = { version = "4.0", features = ["derive"] }
+rand = "0.8"
