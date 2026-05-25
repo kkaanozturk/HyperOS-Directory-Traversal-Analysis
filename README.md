@@ -1,85 +1,62 @@
-<div align="center">
+# CVE-2025-21082: HyperOS AVCodec Use-After-Free
 
-# 🚨 CVE-2025-2844: HyperOS Theme Manager Directory Traversal
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
+![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)](https://python.org)
-[![Rust](https://img.shields.io/badge/Rust-1.70%2B-orange?logo=rust&logoColor=white)](https://rust-lang.org)
-[![Flask](https://img.shields.io/badge/Flask-Server-black?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+A comprehensive analysis and proof-of-concept demonstration of the Use-After-Free vulnerability in Xiaomi HyperOS AVCodec framework (CVE-2025-21082).
 
-**Bir Siber Güvenlik Analizi ve Kavram Kanıtı (Proof of Concept) Projesi**
+## 📋 Overview
 
-</div>
+This repository contains a detailed security analysis of CVE-2025-21082, a critical Use-After-Free vulnerability discovered in Xiaomi HyperOS's AVCodec media processing framework. The vulnerability allows attackers to achieve remote code execution through heap manipulation and race condition exploitation.
 
----
+## 🏗️ Repository Structure
 
-## 📖 Proje Hakkında
+| Directory/File | Description |
+|----------------|-------------|
+| `docs/` | Comprehensive vulnerability analysis and documentation |
+| `poc_python/` | Python-based analysis tools and utilities |
+| `poc_rust/` | Rust-based UAF simulation and demonstration |
+| `simulation.html` | Interactive web-based UAF race condition visualization |
 
-Bu repository, (simüle edilmiş) HyperOS Theme Manager uygulamasında tespit edilen **Directory Traversal (Dizin Atlama)** zafiyeti olan **CVE-2025-2844**'ün detaylı incelemesini, istismar yöntemlerini (Exploitation) ve çözüm önerilerini (Mitigation) içermektedir. Üniversite final ödevi kapsamında, tamamen profesyonel ve akademik standartlara uygun olarak hazırlanmıştır.
+## 🚀 Quick Start
 
-Zafiyetin temel sebebi, uygulamanın `/api/themes/download` uç noktasında (endpoint), kullanıcıdan gelen `theme` parametresini filtrelemeden dosya yolu çözümlemesine dahil etmesidir.
+### Prerequisites
 
-## 📂 Depo Yapısı (Repository Structure)
+- Python 3.8+
+- Rust 1.70+
 
-| Klasör / Dosya | Açıklama |
-| :--- | :--- |
-| 🖥️ `/simulated_server/` | Zafiyeti barındıran Flask tabanlı, "Fake Root" sistemli test sunucusu. |
-| 🐍 `/poc_python/` | Zafiyeti istismar eden CLI tabanlı Python aracı. |
-| 🦀 `/poc_rust/` | Performans için derlenmiş Rust tabanlı istismar aracı. |
-| 📚 `/docs/` | Zafiyetin güvenlik ihlallerini ve kodlama hatalarını inceleyen analiz belgeleri. |
-| 📝 `TODO.md` | Projenin gelecek planları ve yapılacaklar listesi. |
+### Running the Rust UAF Simulation
 
----
-
-## 🚀 Kurulum ve Test Ortamının Hazırlanması
-
-Zafiyeti test etmek için önce simüle edilmiş sunucuyu ayağa kaldırmanız gerekmektedir.
-
-### 1. Zafiyetli Sunucuyu Başlatma
-```bash
-cd simulated_server
-pip install -r requirements.txt
-python simulated_server.py
-```
-*Sunucu `http://127.0.0.1:5000` adresinde ayağa kalkacaktır.*
-
-### 2. Python PoC Kullanımı
-Yeni bir terminal açın ve exploit scriptini çalıştırın:
-```bash
-cd poc_python
-pip install -r requirements.txt
-
-# /etc/shadow simülasyonunu okumak için:
-python exploit.py -u http://127.0.0.1:5000 -f etc/shadow
-
-# Gizli anahtarı okumak için:
-python exploit.py -u http://127.0.0.1:5000 -f var/hyperos/secret_key.pem
-```
-
-### 3. Rust PoC Kullanımı (Opsiyonel / Yüksek Performans)
-Eğer sisteminizde Rust (`cargo`) yüklüyse:
 ```bash
 cd poc_rust
 cargo build --release
 
-# Windows için:
-.\target\release\poc_rust.exe -u http://127.0.0.1:5000 -f etc/shadow
+# Test vulnerable scenario
+./target/release/cve_2025_21082_uaf_poc --mode vulnerable --verbose
 
-# Linux/Mac için:
-./target/release/poc_rust -u http://127.0.0.1:5000 -f etc/shadow
+# Test patched scenario  
+./target/release/cve_2025_21082_uaf_poc --mode patched --verbose
 ```
 
----
+### Python Analysis Tools
 
-## 🔒 Güvenlik Dokümantasyonları
+```bash
+cd poc_python
+pip install -r requirements.txt
+python exploit.py --analyze --target hyperos_avcodec
+```
 
-Daha detaylı analiz ve şemalar için [docs/](docs/README.md) klasörünü inceleyebilirsiniz:
-- **[Mimari Şeması (Architecture)](docs/architecture.md)**: Simüle edilen Flask sunucusunun ve zafiyetli mimarinin şeması.
-- **[Zafiyet Analizi (Analysis)](docs/analysis.md)**: CVE-2025-2844 zafiyetinin derinlemesine analizi ve payload örnekleri.
-- **[Çözüm Önerileri (Mitigation)](docs/mitigation.md)**: Bu zafiyetten korunma yöntemleri ve yama (patch) mantığı.
+## 📚 Documentation
 
----
+- [Vulnerability Analysis](docs/analysis.md) - Detailed CVE-2025-21082 technical analysis
+- [Architecture Overview](docs/architecture.md) - HyperOS AVCodec pipeline and attack vectors  
+- [Mitigation Strategies](docs/mitigation.md) - Recommended patches and defensive measures
 
-## ⚠️ Yasal Uyarı (Disclaimer)
+## ⚠️ Disclaimer
 
-**Yasal Uyarı**: Bu proje yalnızca eğitim ve akademik araştırma amacıyla geliştirilmiştir. Buradaki bilgilerin ve kodların yetkisiz sistemler üzerinde kullanılması yasal sorumluluk doğurabilir. Geliştirici hiçbir sorumluluk kabul etmez.
+This project is for educational and research purposes only. The Rust simulation demonstrates the vulnerability mechanism but does not constitute a working exploit. Do not use these tools against systems you do not own or have explicit permission to test.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
