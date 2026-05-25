@@ -1,69 +1,69 @@
-# CVE-2025-21082 Documentation
+# CVE-2025-21082 Dokümantasyonu
 
-This directory contains comprehensive documentation for the HyperOS AVCodec Use-After-Free vulnerability analysis.
+Bu dizin, HyperOS AVCodec Use-After-Free zafiyet analizi için kapsamlı dokümantasyon içermektedir.
 
-## Documentation Structure
+## Dokümantasyon Yapısı
 
-### 📊 [Analysis Report](analysis.md)
-Detailed technical analysis of CVE-2025-21082 including:
-- Vulnerability mechanics and root cause analysis
-- CVSS v3.1 scoring breakdown
-- Attack scenarios and proof-of-concept demonstrations
-- Comparison with AOSP MediaCodec implementation
-- Detection methods and timeline
+### 📊 [Zafiyet Analizi](zafiyet-analizi.md)
+CVE-2025-21082'nin detaylı teknik analizi:
+- Zafiyet mekanikleri ve kök neden analizi
+- CVSS v3.1 skorlama detayı
+- Saldırı senaryoları ve kavram kanıtı gösterimleri
+- AOSP MediaCodec implementasyonu ile karşılaştırma
+- Tespit yöntemleri ve zaman çizelgesi
 
-### 🏗️ [Architecture Overview](architecture.md)  
-System architecture analysis covering:
-- HyperOS AVCodec framework components
-- AI Enhancement Layer integration
-- Memory management and thread synchronization
-- Attack surface analysis and security boundaries
-- Data flow diagrams and vulnerability points
+### 🏗️ [Mimari Genel Bakış](mimari-analiz.md)  
+Sistem mimarisi analizi:
+- HyperOS AVCodec framework bileşenleri
+- AI Enhancement Layer entegrasyonu
+- Bellek yönetimi ve thread senkronizasyonu
+- Saldırı yüzeyi analizi ve güvenlik sınırları
+- Veri akış diyagramları ve zafiyet noktaları
 
-### 🛡️ [Mitigation Strategies](mitigation.md)
-Comprehensive mitigation approaches including:
-- Immediate patches and hotfixes
-- Long-term architectural improvements
-- System-level security enhancements
-- Deployment strategies and verification methods
-- Runtime monitoring and detection systems
+### 🛡️ [Çözüm Stratejileri](cozum-onerileri.md)
+Kapsamlı azaltma yaklaşımları:
+- Acil yamalar ve hotfix'ler
+- Uzun vadeli mimari iyileştirmeler
+- Sistem seviyesi güvenlik geliştirmeleri
+- Dağıtım stratejileri ve doğrulama yöntemleri
+- Runtime izleme ve tespit sistemleri
 
-## Quick Navigation
+## Hızlı Navigasyon
 
-| Topic | Document | Key Sections |
-|-------|----------|--------------|
-| **Vulnerability Details** | [analysis.md](analysis.md) | Technical Description, Impact Assessment |
-| **System Architecture** | [architecture.md](architecture.md) | Component Architecture, Vulnerability Points |
-| **Security Fixes** | [mitigation.md](mitigation.md) | Immediate Patches, Long-term Improvements |
+| Konu | Doküman | Anahtar Bölümler |
+|------|---------|------------------|
+| **Zafiyet Detayları** | [zafiyet-analizi.md](zafiyet-analizi.md) | Teknik Açıklama, Etki Değerlendirmesi |
+| **Sistem Mimarisi** | [mimari-analiz.md](mimari-analiz.md) | Bileşen Mimarisi, Zafiyet Noktaları |
+| **Güvenlik Düzeltmeleri** | [cozum-onerileri.md](cozum-onerileri.md) | Acil Yamalar, Uzun Vadeli İyileştirmeler |
 
-## Getting Started
+## Başlangıç
 
-1. **Understanding the Vulnerability**: Start with [analysis.md](analysis.md) for technical details
-2. **System Context**: Review [architecture.md](architecture.md) for architectural understanding  
-3. **Implementing Fixes**: Follow [mitigation.md](mitigation.md) for remediation strategies
+1. **Zafiyeti Anlamak**: Teknik detaylar için [zafiyet-analizi.md](zafiyet-analizi.md) ile başlayın
+2. **Sistem Bağlamı**: Mimari anlayış için [mimari-analiz.md](mimari-analiz.md)'yi inceleyin  
+3. **Düzeltmeleri Uygulamak**: Çözüm stratejileri için [cozum-onerileri.md](cozum-onerileri.md)'yi takip edin
 
-## Rust PoC Usage
+## Rust PoC Kullanımı
 
-The Rust proof-of-concept demonstrates the vulnerability mechanism:
+Rust kavram kanıtı zafiyet mekanizmasını gösterir:
 
 ```bash
 cd ../poc_rust
 cargo build --release
 
-# Demonstrate vulnerable scenario
+# Zafiyetli senaryoyu göster
 ./target/release/cve_2025_21082_uaf_poc --mode vulnerable --verbose
 
-# Show patched behavior
+# Yamalı davranışı göster
 ./target/release/cve_2025_21082_uaf_poc --mode patched --verbose
 ```
 
-## Interactive Simulation
+## İnteraktif Simülasyon
 
-Open `../simulation.html` in a web browser to see an interactive visualization of the UAF race condition and heap reclamation process.
+UAF race condition ve heap geri kazanım sürecinin interaktif görselleştirmesi için `../simulation.html` dosyasını web tarayıcısında açın.
 
-## References
+## Referanslar
 
 - [CWE-416: Use After Free](https://cwe.mitre.org/data/definitions/416.html)
-- [OWASP Memory Corruption](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)
-- [Android Security Bulletin](https://source.android.com/security/bulletin)
-- [Xiaomi Security Center](https://trust.mi.com/misrc)
+- [OWASP Bellek Bozulması](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)
+- [Android Güvenlik Bülteni](https://source.android.com/security/bulletin)
+- [Xiaomi Güvenlik Merkezi](https://trust.mi.com/misrc)
