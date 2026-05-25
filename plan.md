@@ -1,28 +1,162 @@
-# Proje Zaman Çizelgesi: CVE-2025-2844 (HyperOS Theme Manager Directory Traversal)
+# CVE-2025-21082 Project Plan
 
-Bu belge, HyperOS Theme Manager üzerindeki Directory Traversal zafiyetini (CVE-2025-2844) inceleyen final projesi için 1 Haziran'a kadar olan günlük çalışma planını içermektedir.
+## Project Overview
+Analysis and demonstration of the Use-After-Free vulnerability in Xiaomi HyperOS AVCodec framework (CVE-2025-21082).
 
-## 📅 Zaman Çizelgesi (18 Mayıs - 1 Haziran)
+## Timeline
 
-### 1. Aşama: Temellendirme ve Araştırma (18-20 Mayıs)
-- **18 Mayıs:** Proje reposunun başlatılması, zaman çizelgesinin (`plan.md`) güncellenmesi ve `.git` yapısının kurulması. Temel klasör hiyerarşisinin (`/simulated_server`, `/poc_python`, `/poc_rust`, `/docs`) oluşturulması.
-- **19 Mayıs:** Directory Traversal zafiyet mekanizmasının ve HyperOS Theme Manager yapısının detaylı literatür taraması. Profesyonel `README.md` iskeletinin oluşturulması.
-- **20 Mayıs:** Zafiyetli test sunucusunun (Flask ile simüle edilmiş "HyperOS Theme Manager") geliştirilmesi. Hedef dosya olarak hassas yapılandırma dosyasının (`/var/hyperos/secret_key.pem` ve `/etc/shadow` simülasyonu) sisteme kurgulanması.
+### Phase 1: Research & Analysis (Week 1-2)
+- [x] Vulnerability discovery and initial analysis
+- [x] Technical documentation and CVSS scoring
+- [x] Architecture analysis and attack surface mapping
+- [x] Proof-of-concept development planning
 
-### 2. Aşama: Python ile PoC Geliştirme ve Test (21-24 Mayıs)
-- **21 Mayıs:** Python ile PoC (Proof of Concept) exploit kodunun temel iskeletinin yazılması.
-- **22 Mayıs:** Directory Traversal payload'larının (`../../../` varyasyonları, URL encoding bypass vb.) Python koduna entegrasyonu ve simüle edilmiş sunucu üzerinde test edilmesi.
-- **23 Mayıs:** Python scriptinin komut satırı argümanları (CLI) alacak şekilde geliştirilmesi (hedef URL, okunacak dosya vb.).
-- **24 Mayıs:** Hata ayıklama (Debugging), hata yönetimi (try-except) ve kodun belgelendirilmesi (docstrings). Zafiyetin tam olarak çalıştığının doğrulanması.
+### Phase 2: Proof-of-Concept Development (Week 3-4)
+- [x] Rust-based UAF simulation implementation
+- [x] Vulnerable and patched scenario demonstrations
+- [x] Memory safety testing and validation
+- [x] Interactive web simulation development
 
-### 3. Aşama: Rust ile Optimizasyon ve Profesyonelleştirme (25-28 Mayıs)
-- **25 Mayıs:** Çalışan Python mantığının Rust diline çevrilmesi (hız, performans ve düşük boyut için).
-- **26 Mayıs:** Rust projesinin (`cargo new`) yapılandırılması, HTTP istekleri için gerekli kütüphanelerin (`reqwest` vb.) entegrasyonu.
-- **27 Mayıs:** Rust tabanlı PoC'nin simüle edilmiş sunucuda test edilmesi ve derlenmesi (release build).
-- **28 Mayıs:** Rust kodunun optimize edilmesi, CLI argümanlarının (`clap` crate) eklenmesi ve dokümantasyon.
+### Phase 3: Documentation & Mitigation (Week 5-6)
+- [x] Comprehensive vulnerability analysis documentation
+- [x] Mitigation strategy development
+- [x] Security patch recommendations
+- [x] Deployment and testing procedures
 
-### 4. Aşama: Dokümantasyon ve Demo Hazırlığı (29 Mayıs - 1 Haziran)
-- **29 Mayıs:** `README.md` dosyasının detaylı kurulum (Python ve Rust için ayrı ayrı), kullanım ve zafiyet açıklamasıyla birlikte son haline getirilmesi. Zafiyetin nasıl kapatılabileceğine dair güvenli kodlama önerilerinin (Mitigation/Patch) eklenmesi.
-- **30 Mayıs:** Demo video senaryosunun hazırlanması. (Arka plan bilgisi -> Zafiyetli sunucunun başlatılması -> Rust/Python PoC çalıştırılması -> Gizli anahtarın ele geçirilmesi).
-- **31 Mayıs:** Demo videosunun çekilmesi, README'ye eklenmesi ve projenin GitHub reposuna temiz bir şekilde commitlenmesi.
-- **1 Haziran:** Son kontroller ve projenin teslimi.
+### Phase 4: Validation & Presentation (Week 7-8)
+- [ ] Automated testing suite implementation
+- [ ] Peer review and validation
+- [ ] Final presentation preparation
+- [ ] Academic paper submission
+
+## Deliverables
+
+### Technical Deliverables
+- [x] **Rust PoC**: Memory-safe UAF simulation demonstrating vulnerability mechanics
+- [x] **Documentation Suite**: Comprehensive analysis, architecture, and mitigation docs
+- [x] **Interactive Demo**: Web-based visualization of race condition and heap exploitation
+- [ ] **Test Suite**: Automated validation and regression testing
+
+### Academic Deliverables
+- [x] **Technical Report**: Detailed vulnerability analysis and impact assessment
+- [x] **Mitigation Guide**: Comprehensive security recommendations and patches
+- [ ] **Conference Paper**: Academic publication on UAF vulnerabilities in mobile frameworks
+- [ ] **Presentation**: Technical presentation for security conference
+
+## Resource Requirements
+
+### Development Environment
+- Rust 1.70+ for safe UAF simulation
+- Python 3.8+ for analysis tools
+- Modern web browser for interactive demonstrations
+- Git for version control and collaboration
+
+### Testing Infrastructure
+- AddressSanitizer (ASan) for memory error detection
+- ThreadSanitizer (TSan) for race condition analysis
+- Valgrind for additional memory debugging
+- Fuzzing infrastructure for automated testing
+
+### Documentation Tools
+- Markdown for technical documentation
+- Mermaid for architecture diagrams
+- LaTeX for academic paper preparation
+- Reveal.js for presentation slides
+
+## Risk Assessment
+
+### Technical Risks
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Rust simulation complexity | Medium | High | Incremental development, extensive testing |
+| Memory safety validation | Low | High | Multiple sanitizer tools, peer review |
+| Cross-platform compatibility | Medium | Medium | Containerized testing environment |
+
+### Academic Risks
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Publication timeline | Medium | Medium | Early submission, multiple venues |
+| Technical accuracy | Low | High | Expert review, formal verification |
+| Ethical considerations | Low | High | Responsible disclosure, educational focus |
+
+## Success Metrics
+
+### Technical Success
+- [x] Successful UAF demonstration in controlled environment
+- [x] Clear vulnerability reproduction steps
+- [x] Effective mitigation implementation
+- [ ] Zero false positives in automated testing
+
+### Academic Success
+- [x] Comprehensive technical documentation
+- [x] Novel insights into mobile framework security
+- [ ] Peer-reviewed publication acceptance
+- [ ] Industry adoption of mitigation strategies
+
+## Next Steps
+
+### Immediate (Week 7)
+1. Implement automated testing suite
+2. Conduct comprehensive security review
+3. Prepare conference presentation materials
+4. Submit to academic venues
+
+### Short-term (Month 2)
+1. Develop additional PoC variants
+2. Extend analysis to related vulnerabilities
+3. Create educational materials and workshops
+4. Engage with security community
+
+### Long-term (Quarter 2)
+1. Monitor vendor patch adoption
+2. Develop follow-up research projects
+3. Contribute to security standards
+4. Mentor future security researchers
+
+## Team Responsibilities
+
+### Lead Researcher
+- Overall project coordination
+- Technical architecture decisions
+- Academic writing and publication
+- Industry engagement and disclosure
+
+### Security Analyst
+- Vulnerability analysis and documentation
+- Mitigation strategy development
+- Testing and validation procedures
+- Security tool integration
+
+### Software Developer
+- Rust PoC implementation
+- Interactive demonstration development
+- Automated testing infrastructure
+- Cross-platform compatibility
+
+## Budget Considerations
+
+### Development Costs
+- Development tools and licenses: $500
+- Testing infrastructure: $1,000
+- Conference attendance: $2,000
+- Publication fees: $1,500
+
+### Total Estimated Budget: $5,000
+
+## Quality Assurance
+
+### Code Review Process
+1. Peer review for all code changes
+2. Automated testing on multiple platforms
+3. Security-focused code analysis
+4. Performance and memory usage validation
+
+### Documentation Review
+1. Technical accuracy verification
+2. Clarity and completeness assessment
+3. Academic writing standards compliance
+4. Legal and ethical review
+
+## Conclusion
+
+This project plan provides a structured approach to analyzing and demonstrating CVE-2025-21082 while maintaining high academic and technical standards. The focus on memory-safe demonstration techniques and comprehensive documentation ensures both educational value and practical security impact.
