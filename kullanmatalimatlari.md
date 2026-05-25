@@ -1,87 +1,298 @@
-# 🚀 Adım Adım Kullanma Talimatları (En Basit Haliyle)
+# CVE-2025-21082 Kullanım Talimatları
 
-Bu rehber, projeyi hayatında daha önce hiç kod çalıştırmamış birinin bile rahatlıkla açıp test edebilmesi için çok basit adımlarla hazırlanmıştır. Lütfen adımları sırasıyla takip edin.
+## 🎯 Proje Hakkında
+
+Bu proje, Xiaomi HyperOS AVCodec framework'ünde tespit edilen **Use-After-Free (UAF)** zafiyeti olan **CVE-2025-21082**'nin detaylı analizini ve güvenli simülasyonunu içermektedir.
+
+## 📋 Sistem Gereksinimleri
+
+### Minimum Gereksinimler
+- **Rust**: 1.70 veya üzeri
+- **Python**: 3.8 veya üzeri  
+- **İşletim Sistemi**: Windows 10/11, Linux, macOS
+- **RAM**: 4GB (8GB önerilir)
+- **Disk Alanı**: 500MB
+
+### Önerilen Geliştirme Ortamı
+- Visual Studio Code + Rust Analyzer
+- Git versiyon kontrolü
+- Modern web tarayıcısı (Chrome, Firefox, Edge)
+
+## 🚀 Kurulum Adımları
+
+### 1. Depoyu Klonlama
+```bash
+git clone https://github.com/username/HyperOS-Directory-Traversal-Analysis.git
+cd HyperOS-Directory-Traversal-Analysis
+```
+
+### 2. Rust Ortamının Hazırlanması
+```bash
+# Rust kurulumu (eğer yüklü değilse)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# Proje bağımlılıklarını kontrol etme
+cd poc_rust
+cargo check
+```
+
+### 3. Python Ortamının Hazırlanması (Opsiyonel)
+```bash
+cd poc_python
+pip install -r requirements.txt
+```
+
+## 🔬 Rust PoC Kullanımı
+
+### Temel Kullanım
+
+#### Zafiyetli Senaryo Çalıştırma
+```bash
+cd poc_rust
+cargo build --release
+
+# Windows için:
+.\target\release\cve_2025_21082_uaf_poc.exe --mode vulnerable
+
+# Linux/macOS için:
+./target/release/cve_2025_21082_uaf_poc --mode vulnerable
+```
+
+#### Yamalanmış Senaryo Çalıştırma
+```bash
+# Windows için:
+.\target\release\cve_2025_21082_uaf_poc.exe --mode patched
+
+# Linux/macOS için:
+./target/release/cve_2025_21082_uaf_poc --mode patched
+```
+
+### Gelişmiş Kullanım
+
+#### Detaylı Bellek Adresi Logları
+```bash
+# Verbose mod ile çalıştırma
+./target/release/cve_2025_21082_uaf_poc --mode vulnerable --verbose
+```
+
+#### Debug Modunda Derleme
+```bash
+# Debug bilgileri ile derleme
+cargo build
+
+# Debug binary çalıştırma
+./target/debug/cve_2025_21082_uaf_poc --mode vulnerable --verbose
+```
+
+## 📊 Çıktı Analizi
+
+### Zafiyetli Senaryo Çıktısı
+```
+🔬 CVE-2025-21082: HyperOS AVCodec UAF PoC
+Mode: vulnerable
+Verbose: true
+
+⚠️ Running vulnerable scenario...
+CodecContext allocated at: 0x7f8b4c000b20
+🧵 Starting worker thread...
+🗑️ Main thread releasing codec context (UAF trigger)...
+Memory reclaimed with corrupted data at: 0x7f8b4c000b20
+🔄 Worker thread accessing codec context...
+🚨 UAF detected! Magic number corrupted: 0xFEEDFACE
+💥 UAF vulnerability triggered on frame 0!
+
+🚨 Vulnerable scenario completed - UAF demonstrated!
+⚠️ In a real exploit, this could lead to RCE
+```
+
+### Yamalanmış Senaryo Çıktısı
+```
+🔬 CVE-2025-21082: HyperOS AVCodec UAF PoC
+Mode: patched
+Verbose: true
+
+✅ Running patched scenario...
+CodecContext allocated at: 0x7f8b4c000b20
+🧵 Starting worker thread...
+⏳ Waiting for worker thread to complete (patch applied)...
+🔄 Worker thread processing frames safely...
+✅ Frame 0 processed successfully
+✅ Frame 1 processed successfully
+✅ Frame 2 processed successfully
+✅ Frame 3 processed successfully
+✅ Frame 4 processed successfully
+✅ Worker thread completed safely
+🗑️ Safely releasing codec context...
+CodecContext safely freed
+
+✅ Patched scenario completed - No UAF occurred!
+🛡️ Proper synchronization prevents the vulnerability
+```
+
+## 🌐 İnteraktif Simülasyon
+
+### Web Simülasyonu Çalıştırma
+```bash
+# Basit HTTP sunucusu başlatma
+python -m http.server 8000
+
+# Tarayıcıda açma
+# http://localhost:8000/simulation.html
+```
+
+### Simülasyon Özellikleri
+- **5 Sahne Animasyonu**: Lab ortamı → Context oluşturma → Race condition → UAF sömürüsü → Patch karşılaştırması
+- **İnteraktif Kontroller**: Oynat/Duraklat, adım adım ilerleme
+- **Bellek Görselleştirmesi**: Heap layout ve corruption gösterimi
+- **Zaman Çizelgesi**: Vulnerability timeline analizi
+
+## 📚 Dokümantasyon İncelemesi
+
+### Temel Dokümantasyon
+```bash
+# Zafiyet analizi
+cat docs/analysis.md
+
+# Sistem mimarisi
+cat docs/architecture.md
+
+# Çözüm önerileri
+cat docs/mitigation.md
+```
+
+### Markdown Görüntüleme
+- **VS Code**: Markdown Preview Extension
+- **Typora**: Profesyonel Markdown editörü
+- **GitHub**: Online görüntüleme
+
+## 🧪 Test ve Doğrulama
+
+### Otomatik Testler
+```bash
+cd poc_rust
+
+# Unit testleri çalıştırma
+cargo test
+
+# Bellek güvenliği testleri
+cargo test --features memory-safety
+
+# Performans testleri
+cargo bench
+```
+
+### Manuel Doğrulama
+```bash
+# Farklı parametrelerle test
+./target/release/cve_2025_21082_uaf_poc --mode vulnerable --verbose > vulnerable_output.log
+./target/release/cve_2025_21082_uaf_poc --mode patched --verbose > patched_output.log
+
+# Çıktıları karşılaştırma
+diff vulnerable_output.log patched_output.log
+```
+
+## 🔧 Sorun Giderme
+
+### Yaygın Sorunlar ve Çözümleri
+
+#### Rust Derleme Hataları
+```bash
+# Rust toolchain güncelleme
+rustup update
+
+# Bağımlılık önbelleğini temizleme
+cargo clean
+cargo build
+```
+
+#### Bellek Erişim Hataları
+```bash
+# AddressSanitizer ile çalıştırma
+export RUSTFLAGS="-Z sanitizer=address"
+cargo run --target x86_64-unknown-linux-gnu
+```
+
+#### Platform Uyumluluk Sorunları
+```bash
+# Hedef platform belirtme
+cargo build --target x86_64-pc-windows-msvc  # Windows
+cargo build --target x86_64-unknown-linux-gnu  # Linux
+cargo build --target x86_64-apple-darwin  # macOS
+```
+
+### Debug Modunda Çalıştırma
+```bash
+# GDB ile debug (Linux/macOS)
+gdb ./target/debug/cve_2025_21082_uaf_poc
+(gdb) run --mode vulnerable --verbose
+
+# LLDB ile debug (macOS)
+lldb ./target/debug/cve_2025_21082_uaf_poc
+(lldb) run --mode vulnerable --verbose
+```
+
+## 📈 Performans Optimizasyonu
+
+### Release Modunda Derleme
+```bash
+# Optimizasyonlu derleme
+cargo build --release
+
+# Boyut optimizasyonu
+cargo build --release --config profile.release.opt-level='"z"'
+```
+
+### Bellek Kullanımı İzleme
+```bash
+# Valgrind ile bellek analizi (Linux)
+valgrind --tool=memcheck ./target/release/cve_2025_21082_uaf_poc --mode vulnerable
+
+# Heaptrack ile heap analizi
+heaptrack ./target/release/cve_2025_21082_uaf_poc --mode vulnerable
+```
+
+## 🎓 Eğitim Amaçlı Kullanım
+
+### Akademik Çalışmalar İçin
+1. **Zafiyet Analizi**: `docs/analysis.md` dosyasını inceleyin
+2. **Kod İncelemesi**: `poc_rust/src/main.rs` dosyasındaki unsafe Rust kullanımını analiz edin
+3. **Mitigation Stratejileri**: `docs/mitigation.md` dosyasındaki çözüm önerilerini değerlendirin
+
+### Güvenlik Eğitimi İçin
+1. **Hands-on Demo**: Rust PoC'yi farklı parametrelerle çalıştırın
+2. **İnteraktif Öğrenme**: Web simülasyonunu kullanarak UAF mekanizmasını görselleştirin
+3. **Karşılaştırmalı Analiz**: Vulnerable ve patched senaryoları karşılaştırın
+
+## ⚠️ Güvenlik Uyarıları
+
+### Önemli Notlar
+- Bu proje **tamamen eğitim amaçlıdır**
+- Rust simülasyonu gerçek bir exploit değildir
+- Unsafe Rust kodu kontrollü ortamda çalışır
+- Gerçek sistemlerde zarar verici değildir
+
+### Etik Kullanım
+- Yalnızca kendi sistemlerinizde test edin
+- Yetkisiz sistemlerde kullanmayın
+- Akademik ve eğitim amaçlarıyla sınırlı tutun
+- Sorumlu açıklama (responsible disclosure) ilkelerine uyun
+
+## 📞 Destek ve İletişim
+
+### Teknik Destek
+- **GitHub Issues**: Proje deposunda issue açın
+- **Dokümantasyon**: `docs/` klasöründeki detaylı açıklamaları inceleyin
+- **Kod Yorumları**: Kaynak kodundaki açıklayıcı yorumları okuyun
+
+### Katkıda Bulunma
+1. Fork yapın
+2. Feature branch oluşturun
+3. Değişikliklerinizi commit edin
+4. Pull request gönderin
 
 ---
 
-## 🛠️ Ön Hazırlık: Ne Yüklü Olmalı?
-Bu projeyi çalıştırabilmeniz için bilgisayarınızda **Python** programının yüklü olması gerekiyor. 
-- Yüklü değilse [python.org/downloads](https://www.python.org/downloads/) adresinden indirip kurun. Kurarken "Add Python to PATH" (Python'ı PATH'e ekle) kutucuğunu işaretlemeyi **kesinlikle unutmayın**.
-
----
-
-## 🟢 ADIM 1: Zafiyetli Sunucuyu (Siteyi) Ayağa Kaldırmak
-
-Saldırıyı yapabilmemiz için önce saldıracağımız sitenin çalışıyor olması lazım.
-
-1. `HyperOS-Directory-Traversal-Analysis` (Proje) klasörünün içine girin.
-2. `simulated_server` isimli klasörün içine girin.
-3. Bu klasörün içindeyken klasör yolunun yazdığı üstteki çubuğa (adres çubuğuna) tıklayın, `cmd` yazın ve **Enter**'a basın. Siyah bir komut penceresi açılacak.
-4. Açılan siyah pencereye şu komutu yazıp **Enter**'a basın (Bu işlem gerekli kütüphaneleri indirecek):
-   ```bash
-   pip install -r requirements.txt
-   ```
-5. Kurulum bitince siteyi çalıştırmak için şu komutu yazıp **Enter**'a basın:
-   ```bash
-   python app.py
-   ```
-6. Ekranda `* Running on http://127.0.0.1:5000` yazısını gördüyseniz, **TEBRİKLER!** Siteniz şu an çalışıyor. 
-*(Önemli: Bu siyah pencereyi ASLA KAPATMAYIN, siteyi test ettiğiniz süre boyunca arka planda hep açık kalsın.)*
-
----
-
-## 🔴 ADIM 2: Görsel Arayüz Üzerinden Hack (En Kolay Yöntem)
-
-Şimdi ayağa kaldırdığımız bu şaşalı siteye girip zafiyeti gözümüzle görelim.
-
-1. İstediğiniz bir internet tarayıcısını (Chrome, Edge, Safari vb.) açın.
-2. Adres çubuğuna şunu yazıp siteye girin: **`http://127.0.0.1:5000`**
-3. Karşınıza muazzam tasarımlı "HyperOS Theme Manager" sitesi çıkacak.
-4. Ekranın sağ tarafındaki kırmızı renkli **"Zafiyet Test Paneli (Hacker Mode)"** kısmına bakın.
-5. Oradaki kutucuğa varsayılan olarak şu yazılıdır: `../../../etc/shadow`
-6. **"Exploit Gönder"** butonuna basın.
-7. Alttaki siyah terminal animasyonunda yeşil yazılarla sistemin şifrelerinin (`root:$6...` gibi) döküldüğünü göreceksiniz. Zafiyeti başarıyla sömürdünüz!
-
----
-
-## 🐍 ADIM 3: Python Aracı ile Komut Satırından Hack (Hacker Yöntemi)
-
-Eğer bunu siteden değil de, tam bir hacker gibi siyah terminal ekranından yapmak isterseniz:
-
-1. Ana proje klasörüne (`HyperOS-Directory-Traversal-Analysis`) geri dönün.
-2. Bu sefer `poc_python` klasörünün içine girin.
-3. Yine üstteki adres çubuğuna `cmd` yazıp **Enter**'a basarak burada YENİ bir siyah pencere açın.
-4. Gerekli araçları kurmak için şunu yazıp **Enter**'a basın:
-   ```bash
-   pip install -r requirements.txt
-   ```
-5. Şimdi saldırı aracımızı ateşliyoruz! Şu komutu kopyalayıp yapıştırın ve **Enter**'a basın:
-   ```bash
-   python exploit.py -u http://127.0.0.1:5000 -f etc/shadow
-   ```
-6. Ekranda renkli yazılarla hedefe bağlanıldığını ve gizli dosyaların çekildiğini göreceksiniz.
-7. Başka bir gizli dosyayı (örneğin anahtarı) çekmek isterseniz şu komutu kullanabilirsiniz:
-   ```bash
-   python exploit.py -u http://127.0.0.1:5000 -f var/hyperos/secret_key.pem
-   ```
-
----
-
-## 🦀 ADIM 4: Rust Aracı İle Hack (İsteğe Bağlı - Ekstra)
-
-Bu adım sadece bilgisayarında "Rust" programlama dili kurulu olanlar içindir. Kurulu değilse bu adımı tamamen atlayabilirsiniz, Python aracı aynı işi yapmaktadır.
-
-1. Ana proje klasöründen `poc_rust` klasörüne girin.
-2. Burada `cmd` açın.
-3. Programı derlemek için şunu yazın (biraz sürebilir):
-   ```bash
-   cargo build --release
-   ```
-4. Derleme bittikten sonra aracı çalıştırmak için şunu yazın:
-   ```bash
-   .\target\release\poc_rust.exe -u http://127.0.0.1:5000 -f etc/shadow
-   ```
-
----
-
-**ÖZET:** Önce `simulated_server` içindeki `app.py`'yi çalıştırarak siteyi açıyorsunuz. Sonra isterseniz tarayıcıdan (`http://127.0.0.1:5000`), isterseniz de `poc_python` içindeki araçla bu siteye saldırıyorsunuz. Hepsi bu kadar!
+**Son Güncelleme**: 25 Mayıs 2025  
+**Versiyon**: 1.0.0  
+**Lisans**: MIT License
