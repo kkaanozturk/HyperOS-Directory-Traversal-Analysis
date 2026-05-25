@@ -152,13 +152,13 @@ python -m http.server 8000
 ### Temel Dokümantasyon
 ```bash
 # Zafiyet analizi
-cat docs/analysis.md
+cat docs/zafiyet-analizi.md
 
 # Sistem mimarisi
-cat docs/architecture.md
+cat docs/mimari-analiz.md
 
 # Çözüm önerileri
-cat docs/mitigation.md
+cat docs/cozum-onerileri.md
 ```
 
 ### Markdown Görüntüleme
@@ -255,9 +255,9 @@ heaptrack ./target/release/cve_2025_21082_uaf_poc --mode vulnerable
 ## 🎓 Eğitim Amaçlı Kullanım
 
 ### Akademik Çalışmalar İçin
-1. **Zafiyet Analizi**: `docs/analysis.md` dosyasını inceleyin
+1. **Zafiyet Analizi**: `docs/zafiyet-analizi.md` dosyasını inceleyin
 2. **Kod İncelemesi**: `poc_rust/src/main.rs` dosyasındaki unsafe Rust kullanımını analiz edin
-3. **Mitigation Stratejileri**: `docs/mitigation.md` dosyasındaki çözüm önerilerini değerlendirin
+3. **Mitigation Stratejileri**: `docs/cozum-onerileri.md` dosyasındaki çözüm önerilerini değerlendirin
 
 ### Güvenlik Eğitimi İçin
 1. **Hands-on Demo**: Rust PoC'yi farklı parametrelerle çalıştırın
