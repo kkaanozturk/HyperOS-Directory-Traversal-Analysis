@@ -1,524 +1,736 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HyperOS Directory Traversal Simulation</title>
+    <title>CVE-2025-21082: HyperOS AVCodec UAF Simülasyonu</title>
     <style>
         :root {
-            --bg-color: #0f111a;
-            --text-color: #8f93a2;
-            --accent-color: #82aaff;
-            --error-color: #f07178;
-            --success-color: #c3e88d;
-            --warning-color: #ffcb6b;
-            --panel-bg: #1a1c25;
-            --border-color: #292d3e;
-            --font-mono: 'Courier New', Courier, monospace;
+            --bg-color: #0b0c10;
+            --panel-bg: rgba(31, 40, 51, 0.7);
+            --accent-cyan: #66fcf1;
+            --accent-blue: #45a29e;
+            --alert-red: #ff4655;
+            --warn-yellow: #f1c40f;
+            --success-green: #2ecc71;
+            --text-main: #c5c6c7;
         }
 
-        body,
-        html {
+        * {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-mono);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            background-image: 
+                linear-gradient(rgba(102, 252, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 252, 241, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        header {
-            background-color: var(--panel-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: var(--accent-color);
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            color: var(--accent-blue);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .simulation-area {
+            background: var(--panel-bg);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(102, 252, 241, 0.2);
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 2px;
+            font-family: 'Courier New', Courier, monospace;
         }
 
-        #timer {
-            font-size: 1.2rem;
-            color: var(--warning-color);
+        .btn-primary {
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(102, 252, 241, 0.1);
         }
 
-        .main-container {
-            display: flex;
-            flex: 1;
-            padding: 20px;
-            gap: 20px;
+        .btn-secondary {
+            color: var(--text-main);
+            border-color: var(--text-main);
         }
 
-        .panel {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
+        .btn-success {
+            color: var(--success-green);
+            border-color: var(--success-green);
         }
 
-        .panel-title {
-            color: var(--accent-color);
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 1rem;
-            border-bottom: 1px dashed var(--border-color);
-            padding-bottom: 10px;
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .terminal {
-            background-color: #000;
-            color: #fff;
-            padding: 15px;
-            border-radius: 4px;
-            flex: 1;
-            overflow-y: auto;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.4);
+            background: rgba(102, 252, 241, 0.1);
         }
 
-        .log-line {
-            margin: 0;
-            opacity: 0;
-            animation: fadeIn 0.3s forwards;
-        }
-
-        .log-info {
-            color: var(--accent-color);
-        }
-
-        .log-warning {
-            color: var(--warning-color);
-        }
-
-        .log-error {
-            color: var(--error-color);
-        }
-
-        .log-success {
-            color: var(--success-color);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Visualization Area */
-        .visualization {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .scene {
             display: none;
-            width: 100%;
-            height: 100%;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.5s forwards;
+            min-height: 400px;
+            position: relative;
         }
 
         .scene.active {
-            display: flex;
+            display: block;
+            animation: glitchFade 0.6s ease-out;
+        }
+
+        @keyframes glitchFade {
+            0% { opacity: 0; transform: translateY(10px) scale(0.98); filter: hue-rotate(90deg); }
+            50% { opacity: 0.5; filter: hue-rotate(-90deg); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: hue-rotate(0); }
         }
 
         .scene-title {
-            position: absolute;
-            top: 20px;
-            font-size: 1.5rem;
-            color: var(--success-color);
-            text-shadow: 0 0 10px rgba(195, 232, 141, 0.5);
-        }
-
-        /* Server / File Structure Visuals */
-        .box {
-            border: 2px solid var(--accent-color);
-            border-radius: 8px;
-            padding: 20px;
-            min-width: 200px;
+            font-size: 1.8em;
+            margin-bottom: 25px;
             text-align: center;
-            background: rgba(130, 170, 255, 0.1);
-            position: relative;
-            margin: 20px;
-            transition: all 0.5s;
+            color: #fff;
+            border-bottom: 1px solid rgba(102, 252, 241, 0.2);
+            padding-bottom: 15px;
         }
 
-        .file {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            margin: 5px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-        }
-
-        .payload {
-            background: rgba(240, 113, 120, 0.2);
-            border: 1px solid var(--error-color);
-            color: var(--error-color);
-        }
-
-        /* Arrow animation */
-        .arrow {
-            width: 2px;
-            height: 50px;
-            background-color: var(--accent-color);
-            margin: 10px auto;
-            position: relative;
-        }
-
-        .arrow::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: -4px;
-            border-width: 5px 5px 0 5px;
-            border-style: solid;
-            border-color: var(--accent-color) transparent transparent transparent;
-        }
-
-        /* Moving packet */
-        .packet {
-            width: 20px;
-            height: 20px;
-            background-color: var(--error-color);
-            border-radius: 50%;
-            position: absolute;
-            box-shadow: 0 0 10px var(--error-color);
-            z-index: 10;
-        }
-
-        @keyframes movePacket {
-            0% {
-                top: 0;
-                left: 0;
-                opacity: 1;
-            }
-
-            50% {
-                top: 50%;
-                left: 50%;
-            }
-
-            100% {
-                top: 100%;
-                left: 100%;
-                opacity: 0;
-            }
-        }
-
-        /* Scene specific styles */
-        .code-comparison {
+        .memory-layout {
             display: flex;
-            width: 100%;
+            justify-content: space-around;
+            margin: 40px 0;
+            flex-wrap: wrap;
             gap: 20px;
         }
 
-        .code-block {
-            flex: 1;
-            background: #000;
-            padding: 15px;
+        .memory-block {
+            width: 150px;
+            height: 100px;
+            border: 2px solid rgba(255,255,255,0.1);
             border-radius: 8px;
-            font-size: 0.8rem;
-            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            background: rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
         }
 
-        .code-vulnerable {
-            border: 1px solid var(--error-color);
+        .memory-block::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: 0.5s;
         }
 
-        .code-secure {
-            border: 1px solid var(--success-color);
+        .memory-block:hover::before {
+            left: 100%;
         }
 
-        .red-text {
-            color: var(--error-color);
+        .memory-block.allocated {
+            border-color: var(--success-green);
+            color: var(--success-green);
+            box-shadow: inset 0 0 15px rgba(46, 204, 113, 0.2);
         }
 
-        .green-text {
-            color: var(--success-color);
+        .memory-block.freed {
+            border-color: var(--alert-red);
+            color: var(--alert-red);
+            box-shadow: inset 0 0 15px rgba(255, 70, 85, 0.2);
+            animation: pulse-red 1.5s infinite;
+        }
+
+        .memory-block.corrupted {
+            border-color: var(--warn-yellow) !important;
+            color: var(--warn-yellow) !important;
+            box-shadow: inset 0 0 15px rgba(241, 196, 15, 0.2) !important;
+            animation: glitch-anim 0.3s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes glitch-anim {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 1px) }
+            40% { transform: translate(-1px, -1px) }
+            60% { transform: translate(2px, 1px) }
+            80% { transform: translate(1px, -1px) }
+            100% { transform: translate(0) }
+        }
+
+        .thread-visualization {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+            gap: 20px;
+        }
+
+        .thread {
+            width: 50%;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .thread h3 {
+            margin-bottom: 15px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .thread.main {
+            border-top: 3px solid var(--accent-blue);
+        }
+
+        .thread.worker {
+            border-top: 3px solid #9b59b6;
+        }
+
+        .thread.active {
+            background: rgba(102, 252, 241, 0.05);
+            box-shadow: 0 0 15px rgba(102, 252, 241, 0.1);
+        }
+
+        .timeline {
+            margin: 40px 0;
+            position: relative;
+            border-left: 2px solid rgba(102, 252, 241, 0.3);
+            padding-left: 20px;
+            margin-left: 20px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            opacity: 0.2;
+            transform: translateX(-10px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .timeline-item.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .timeline-marker {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            position: absolute;
+            left: -27px;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .code-block {
+            background: #050505;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            border-left: 3px solid var(--accent-cyan);
+            overflow-x: auto;
+            white-space: pre;
+            font-size: 0.9em;
+            color: #a9b7c6;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .code-comment { color: #629755; font-style: italic; }
+        .code-keyword { color: #cc7832; font-weight: bold; }
+        .code-string { color: #6a8759; }
+        .code-func { color: #ffc66d; }
+        .code-alert { color: var(--alert-red); font-weight: bold; }
+
+        .vulnerability-indicator {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 2em;
+            color: var(--alert-red);
+            animation: warning-flash 1s infinite;
+            display: none;
+            text-shadow: 0 0 20px var(--alert-red);
+        }
+
+        .vulnerability-indicator.show { display: block; }
+
+        @keyframes warning-flash {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            margin: 20px 0 40px 0;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-cyan);
+            width: 0%;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .info-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border-left: 4px solid var(--warn-yellow);
+            padding: 20px;
+            margin: 20px 0;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .info-panel h3 {
+            color: var(--warn-yellow);
+            margin-bottom: 12px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin: 30px 0 10px 0;
+            flex-wrap: wrap;
+            font-size: 0.85em;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .legend-color { width: 14px; height: 14px; border-radius: 3px; }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .header h1 { font-size: 1.8em; }
+            .thread-visualization { flex-direction: column; }
+            .thread { width: 100%; }
         }
     </style>
 </head>
-
 <body>
-
-    <header>
-        <h1>[LAB] HyperOS Dir-Traversal Analysis</h1>
-        <div id="scene-indicator">Scene 1 / 5</div>
-        <div id="timer">00:00</div>
-    </header>
-
-    <div class="main-container">
-
-        <div class="panel visualization">
-            <!-- Scene 1: Lab Environment Setup -->
-            <div id="scene1" class="scene active">
-                <div class="scene-title">Scene 1: Lab Environment Setup</div>
-                <div style="display: flex; gap: 50px;">
-                    <div class="box" id="s1-client">
-                        <h3>Attacker Machine</h3>
-                        <div class="file">exploit_gen.py</div>
-                    </div>
-                    <div class="box" style="border-color: var(--warning-color);" id="s1-server">
-                        <h3 style="color: var(--warning-color);">Mock Server</h3>
-                        <div class="file">server.py (FastAPI)</div>
-                        <div class="file">/themes/ (Upload Dir)</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scene 2: Payload Generation -->
-            <div id="scene2" class="scene">
-                <div class="scene-title">Scene 2: Payload Generation</div>
-                <div class="box" style="width: 400px;">
-                    <h3>exploit_gen.py execution</h3>
-                    <div class="file">zipfile.ZipFile('malicious_theme.mtz', 'w')</div>
-                    <div class="arrow"></div>
-                    <div class="file payload" id="s2-payload">
-                        malicious_theme.mtz<br>
-                        ├── normal_image.png<br>
-                        └── <span class="red-text">../../../../../../../sdcard/Download/hacked.txt</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scene 3: Attack Simulation / Ingestion -->
-            <div id="scene3" class="scene">
-                <div class="scene-title">Scene 3: Attack Simulation</div>
-                <div style="display: flex; gap: 150px; position: relative;">
-                    <div class="box" id="s3-client">Attacker</div>
-                    <div class="box" style="border-color: var(--warning-color);" id="s3-server">Theme Server</div>
-                    <div id="s3-packet" class="packet" style="display: none; top: 50px; left: 180px;"></div>
-                </div>
-                <div style="margin-top: 30px; font-family: monospace; color: var(--accent-color);">
-                    POST /api/theme/upload HTTP/1.1<br>
-                    Content-Type: multipart/form-data<br>
-                    ...<br>
-                    [malicious_theme.mtz binary data]
-                </div>
-            </div>
-
-            <!-- Scene 4: Vulnerability Trigger & Sandbox Escape -->
-            <div id="scene4" class="scene">
-                <div class="scene-title">Scene 4: Sandbox Escape</div>
-                <div style="display: flex; flex-direction: column; align-items: center;">
-                    <div class="box" style="border-color: var(--warning-color); width: 600px;">
-                        <h3>Server Extraction Process</h3>
-                        <div
-                            style="text-align: left; padding: 10px; background: #000; border-radius: 4px; margin-bottom: 10px;">
-                            <code>extract_path = os.path.join(base_dir, zip_info.filename)</code>
-                        </div>
-                        <div id="s4-animation-area"
-                            style="position: relative; height: 150px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-top: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                            <div id="s4-path-text" style="font-size: 1.2rem; transition: color 0.5s;">
-                                /app/themes/
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scene 5: Remediation & Mitigation -->
-            <div id="scene5" class="scene">
-                <div class="scene-title">Scene 5: Remediation & Mitigation</div>
-                <div class="code-comparison">
-                    <div class="code-block code-vulnerable">
-                        <h4 class="red-text">❌ Vulnerable Logic</h4>
-                        <pre><code>for item in z.infolist():
-    # DIRECT JOIN = VULNERABLE
-    target_path = os.path.join(
-        base_dir, 
-        item.filename
-    )
-    with open(target_path, "wb") as f:
-        f.write(z.read(item.filename))</code></pre>
-                    </div>
-                    <div class="code-block code-secure">
-                        <h4 class="green-text">✅ Secure Logic (Canonicalization)</h4>
-                        <pre><code>for item in z.infolist():
-    target_path = os.path.abspath(
-        os.path.join(base_dir, item.filename)
-    )
-    # VERIFY SANDBOX ESCAPE
-    if not target_path.startswith(
-        os.path.abspath(base_dir)
-    ):
-        raise SecurityException("Traversal!")
-    with open(target_path, "wb") as f:
-        f.write(z.read(item.filename))</code></pre>
-                    </div>
-                </div>
-            </div>
-
+    <div class="container">
+        <div class="header">
+            <h1>[ CVE-2025-21082 ]</h1>
+            <div class="subtitle">>_ HyperOS AVCodec UAF Zafiyet Simülasyonu</div>
         </div>
 
-        <div class="panel">
-            <h2 class="panel-title">System Log</h2>
-            <div class="terminal" id="terminal"></div>
+        <div class="controls">
+            <button class="btn btn-primary" onclick="startSimulation()">▶ Simülasyonu Başlat</button>
+            <button class="btn btn-secondary" onclick="previousScene()" id="prevBtn" disabled>◄ Önceki</button>
+            <button class="btn btn-secondary" onclick="nextScene()" id="nextBtn">Sonraki ►</button>
+            <button class="btn btn-success" onclick="resetSimulation()">↻ Sistemi Sıfırla</button>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="simulation-area">
+            <div class="vulnerability-indicator" id="globalWarning">⚠ CRITICAL</div>
+
+            <div class="scene active" id="scene1">
+                <div class="scene-title">0x01: Mimari ve Zafiyete Genel Bakış</div>
+                <div class="info-panel">
+                    <h3>> Sistem Analizi</h3>
+                    <p>HyperOS AVCodec, Android'in MediaCodec altyapısını yapay zeka destekli dinamik ölçeklendirme katmanlarıyla genişletir. Keşfedilen temel zafiyet, asenkron donanım bileşenlerinin hızlı serbest bırakılması (release) işlemi sırasında oluşan bir <strong>Thread Senkronizasyon (Race Condition)</strong> hatasından kaynaklanmaktadır.</p>
+                </div>
+                
+                <div class="code-block">
+<span class="code-comment">// HyperOS AVCodec Çekirdek Asenkron Mimari Yapısı</span>
+<span class="code-keyword">class</span> AVCodecContext {
+    MediaBuffer* buffer_;
+    std::thread worker_thread_;
+    AIEnhancementLayer* ai_layer_;
+    
+    <span class="code-keyword">void</span> <span class="code-func">processFrameAsync</span>() {
+        <span class="code-comment">// Asenkron frame işleme döngüsü başlatılıyor</span>
+        worker_thread_ = std::thread([<span class="code-keyword">this</span>]() {
+            ai_layer_->enhanceFrame(buffer_); <span class="code-alert">// Race Condition hedef pointer'ı</span>
+        });
+        <span class="code-comment">// EKSİK: Durum doğrulaması veya mutex kilit mekanizması yok!</span>
+    }
+};
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="border: 1px solid #2ecc71; background: rgba(46, 204, 113, 0.2);"></div>
+                        <span>Tahsis Edilmiş (Allocated)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="border: 1px solid #ff4655; background: rgba(255, 70, 85, 0.2);"></div>
+                        <span>Serbest Bırakılmış (Freed)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="border: 1px solid #f1c40f; background: rgba(241, 196, 15, 0.2);"></div>
+                        <span>İstismar Edilmiş (Corrupted)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scene" id="scene2">
+                <div class="scene-title">0x02: Bellek Bağlamı (Context) Tahsisi</div>
+                
+                <div class="memory-layout">
+                    <div class="memory-block allocated" id="contextBlock">
+                        CodecContext<br><span style="color:var(--accent-cyan)">0xDEADBEEF</span>
+                    </div>
+                    <div class="memory-block allocated" id="bufferBlock">
+                        MediaBuffer<br><span style="color:var(--accent-cyan)">1024 bytes</span>
+                    </div>
+                    <div class="memory-block allocated" id="aiBlock">
+                        AI Metadata<br><span style="color:var(--accent-cyan)">256 bytes</span>
+                    </div>
+                </div>
+                
+                <div class="thread-visualization">
+                    <div class="thread main active">
+                        <h3>[ Main Thread ]</h3>
+                        <p style="color:#aaa; font-size: 0.9em; line-height: 1.8;">> AVCodec mimarisi oluşturuluyor...<br>> Medya hattı buffer'ları ayrılıyor...<br>> Yapay zeka katmanı başlatılıyor...</p>
+                    </div>
+                    <div class="thread worker">
+                        <h3>[ Worker Thread ]</h3>
+                        <p style="color:#aaa; font-size: 0.9em; line-height: 1.8;">> Pipeline başlatma görevi bekleniyor...<br>> Bekleme durumu (Idle) - Sinyale hazır</p>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+<span class="code-comment">// Çalışma zamanı (runtime) bellek pointer'ları başlatılıyor</span>
+CodecContext* ctx = <span class="code-keyword">new</span> <span class="code-func">CodecContext</span>();
+ctx->buffer_ = <span class="code-func">allocateBuffer</span>(1024);
+ctx->ai_layer_ = <span class="code-keyword">new</span> <span class="code-func">AIEnhancementLayer</span>();
+
+<span class="code-comment">// Heap düzeni stabil. Context Magic Doğrulama Bayrağı: 0xDEADBEEF</span>
+                </div>
+            </div>
+
+            <div class="scene" id="scene3">
+                <div class="scene-title">0x03: Race Condition Tetiklenmesi</div>
+                
+                <div class="thread-visualization">
+                    <div class="thread main active" id="mainThread3">
+                        <h3 style="color: var(--accent-cyan)">[ Main Thread ]</h3>
+                        <p style="font-family: monospace; margin-bottom: 10px;">> processFrameAsync() çağrıldı...</p>
+                        <p style="color: var(--alert-red); font-weight: bold; font-family: monospace;">! Senkronizasyon olmadan release() tetiklendi !</p>
+                        <div style="background: rgba(255, 70, 85, 0.2); border: 1px solid var(--alert-red); padding: 5px; margin-top: 15px; font-size: 0.8em; letter-spacing: 1px;">ZAFİYET PENCERESİ AÇIK</div>
+                    </div>
+                    <div class="thread worker active" id="workerThread3">
+                        <h3 style="color: #9b59b6">[ Worker Thread ]</h3>
+                        <p style="font-family: monospace; margin-bottom: 10px;">> Ses/Görüntü akışı çözülüyor...</p>
+                        <p style="color: var(--warn-yellow); font-family: monospace;">> Paylaşılan bellek bölgesine erişiliyor...</p>
+                        <div style="background: rgba(241, 196, 15, 0.2); border: 1px solid var(--warn-yellow); padding: 5px; margin-top: 15px; font-size: 0.8em; letter-spacing: 1px;">RACE CONDITION AKTİF</div>
+                    </div>
+                </div>
+                
+                <div class="timeline">
+                    <div class="timeline-item" id="t1">
+                        <div class="timeline-marker"></div>
+                        <span>[T+0ms] processFrameAsync() fonksiyonu başlatıldı.</span>
+                    </div>
+                    <div class="timeline-item" id="t2">
+                        <div class="timeline-marker"></div>
+                        <span>[T+10ms] Worker thread arka planda pointer üzerinden okuma yapıyor.</span>
+                    </div>
+                    <div class="timeline-item" id="t3">
+                        <div class="timeline-marker"></div>
+                        <span><strong style="color:var(--alert-red)">[T+12ms] Main thread aniden release() çağrısı yapıyor.</strong></span>
+                    </div>
+                    <div class="timeline-item" id="t4">
+                        <div class="timeline-marker"></div>
+                        <span>[T+15ms] Worker thread döngüdeyken, bellekteki pointer'lar serbest bırakılıyor (Free).</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scene" id="scene4">
+                <div class="scene-title">0x04: Use-After-Free (UAF) İstismarı</div>
+                
+                <div class="memory-layout">
+                    <div class="memory-block freed" id="contextBlock4">
+                        SERBEST BIRAKILDI<br><span style="color:#fff">0xFEEDFACE</span>
+                    </div>
+                    <div class="memory-block" id="bufferBlock4">
+                        Bozulmuş Heap<br><span style="color:#fff">0xAAAABBBB</span>
+                    </div>
+                    <div class="memory-block" id="aiBlock4">
+                        Zararlı Payload<br><span style="color:#fff">0xCCCCDDDD</span>
+                    </div>
+                </div>
+                
+                <div class="info-panel" style="border-color: var(--alert-red);">
+                    <h3 style="color: var(--alert-red);">> UAF Tespiti & İstismar Vektörü</h3>
+                    <p style="margin-bottom: 8px;"><strong>Doğrulama Atlatıldı:</strong> Beklenen başlık etiketi <code>0xDEADBEEF</code> yerine bozulmuş blok <code>0xFEEDFACE</code> okundu.</p>
+                    <p style="margin-bottom: 8px;"><strong>Heap Geri Kazanımı (Reclaiming):</strong> Main Thread tarafından bırakılan bellek blokları, Worker thread işlemi bitirmeden hemen önce saldırgan kontrollü verilerle dolduruldu.</p>
+                    <p><strong>Etki:</strong> Bozulmuş sanal fonksiyon tabloları (vtable hijacking) üzerinden kontrol akışı ele geçirildi. İsteğe bağlı kod yürütme (RCE) sağlandı.</p>
+                </div>
+                
+                <div class="code-block" style="border-color: var(--alert-red);">
+<span class="code-comment">// Bellek izleme simülasyon döngüsü (Rust tabanlı)</span>
+<span class="code-keyword">unsafe fn</span> <span class="code-func">process_frame</span>(&<span class="code-keyword">mut</span> self) -> <span class="code-keyword">bool</span> {
+    <span class="code-keyword">if</span> self.magic != <span class="code-string">0xDEADBEEF</span> {
+        println!(<span class="code-string">"[!] Kritik UAF Tespit Edildi! Reclaimed Pointer Magic: 0x{:08X}"</span>, self.magic);
+        <span class="code-keyword">return false</span>; <span class="code-comment">// Zafiyet başarıyla tetiklendi!</span>
+    }
+    <span class="code-keyword">return true</span>;
+}
+                </div>
+            </div>
+
+            <div class="scene" id="scene5">
+                <div class="scene-title">0x05: Yama Doğrulaması (Mitigation)</div>
+                
+                <div style="display: flex; justify-content: space-between; margin: 20px 0; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 280px; background: rgba(255, 70, 85, 0.05); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 70, 85, 0.2);">
+                        <h3 style="color: var(--alert-red); font-family: monospace; margin-bottom: 10px;">[-] Zafiyetli Kod</h3>
+                        <div class="code-block" style="margin: 0; padding: 15px; font-size: 0.8em; border-color: var(--alert-red); background: #000;">
+<span class="code-keyword">void</span> <span class="code-func">release</span>() {
+    <span class="code-keyword">delete</span> buffer_;
+    buffer_ = <span class="code-keyword">nullptr</span>;
+    <span class="code-comment">// Aktif worker güvenliği yok!</span>
+    <span class="code-comment">// Worker bozuk alanı taramaya devam eder.</span>
+}
+                        </div>
+                    </div>
+                    
+                    <div style="flex: 1; min-width: 280px; background: rgba(46, 204, 113, 0.05); padding: 20px; border-radius: 8px; border: 1px solid rgba(46, 204, 113, 0.2);">
+                        <h3 style="color: var(--success-green); font-family: monospace; margin-bottom: 10px;">[+] Yamalanmış Kod</h3>
+                        <div class="code-block" style="margin: 0; padding: 15px; font-size: 0.8em; border-color: var(--success-green); background: #000;">
+<span class="code-keyword">void</span> <span class="code-func">release</span>() {
+    shutdown_requested_ = <span class="code-keyword">true</span>;
+    worker_cv_.notify_all();
+    
+    <span class="code-comment">// Aktif işlem bitene kadar BEKLE</span>
+    <span class="code-keyword">if</span> (worker_thread_.joinable()) {
+        worker_thread_.join(); 
+    }
+    <span class="code-keyword">delete</span> buffer_; <span class="code-comment">// Güvenli temizlik</span>
+}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-panel" style="border-color: var(--success-green);">
+                    <h3 style="color: var(--success-green);">> Mimari Koruma Stratejileri</h3>
+                    <ul style="margin-left: 20px; padding-left: 5px; color: #ccc;">
+                        <li style="margin-bottom: 8px;"><strong>Belirlenmiş Yaşam Döngüsü Kontrolleri:</strong> Bellek temizleme işleminden önce aktif asenkron kanallar üzerinde katı <code>join()</code> sınırları uygulamak.</li>
+                        <li style="margin-bottom: 8px;"><strong>Güvenli İşaretçiler (Smart Pointers):</strong> C++'da <code>std::shared_ptr</code> veya Rust'ın bellek güvenliği soyutlamalarını kullanarak referans sayımını otomatikleştirmek.</li>
+                        <li><strong>Sanitizer Taramaları:</strong> Test ortamlarına LLVM AddressSanitizer (ASan) ve ThreadSanitizer entegre ederek bellek sızıntılarını derleme aşamasında yakalamak.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        const terminal = document.getElementById('terminal');
-        const scenes = document.querySelectorAll('.scene');
-        const sceneIndicator = document.getElementById('scene-indicator');
-        const timerEl = document.getElementById('timer');
+        let currentScene = 1;
+        const totalScenes = 5;
+        let isPlaying = false;
+        let autoPlayInterval;
 
-        let logLines = [];
-        let startTime = Date.now();
-
-        function log(message, type = 'info') {
-            const p = document.createElement('p');
-            p.className = `log-line log-${type}`;
-            const time = new Date().toISOString().split('T')[1].substring(0, 12);
-            p.innerHTML = `[${time}] ${message}`;
-            terminal.appendChild(p);
-            terminal.scrollTop = terminal.scrollHeight;
+        function updateProgress() {
+            const progress = (currentScene / totalScenes) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
         }
 
-        function switchScene(index) {
-            scenes.forEach(s => s.classList.remove('active'));
-            document.getElementById(`scene${index}`).classList.add('active');
-            sceneIndicator.innerText = `Scene ${index} / 5`;
+        function showScene(sceneNumber) {
+            for (let i = 1; i <= totalScenes; i++) {
+                document.getElementById(`scene${i}`).classList.remove('active');
+            }
+            
+            document.getElementById(`scene${sceneNumber}`).classList.add('active');
+            document.getElementById('prevBtn').disabled = sceneNumber === 1;
+            document.getElementById('nextBtn').disabled = sceneNumber === totalScenes;
+            
+            updateProgress();
+            animateScene(sceneNumber);
         }
 
-        function updateTimer() {
-            const diff = Date.now() - startTime;
-            const secs = Math.floor(diff / 1000);
-            const mins = Math.floor(secs / 60);
-            const s = secs % 60;
-            timerEl.innerText = `${mins.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        function animateScene(sceneNumber) {
+            const warningElement = document.getElementById('globalWarning');
+            if (sceneNumber === 3 || sceneNumber === 4) {
+                warningElement.classList.add('show');
+            } else {
+                warningElement.classList.remove('show');
+            }
+
+            switch(sceneNumber) {
+                case 2:
+                    setTimeout(() => {
+                        const blocks = ['contextBlock', 'bufferBlock', 'aiBlock'];
+                        blocks.forEach((id, index) => {
+                            setTimeout(() => {
+                                const block = document.getElementById(id);
+                                if (block) {
+                                    block.style.transform = 'scale(1.1) translateY(-5px)';
+                                    block.style.boxShadow = '0 10px 20px rgba(46, 204, 113, 0.2)';
+                                    setTimeout(() => {
+                                        block.style.transform = 'scale(1) translateY(0)';
+                                        block.style.boxShadow = 'none';
+                                    }, 250);
+                                }
+                            }, index * 200);
+                        });
+                    }, 200);
+                    break;
+                    
+                case 3:
+                    document.querySelectorAll('#scene3 .timeline-item').forEach(el => el.classList.remove('active'));
+                    setTimeout(() => {
+                        const targets = ['t1', 't2', 't3', 't4'];
+                        targets.forEach((id, index) => {
+                            setTimeout(() => {
+                                const element = document.getElementById(id);
+                                if (element) element.classList.add('active');
+                            }, index * 800);
+                        });
+                    }, 150);
+                    break;
+                    
+                case 4:
+                    setTimeout(() => {
+                        const b1 = document.getElementById('bufferBlock4');
+                        const b2 = document.getElementById('aiBlock4');
+                        if (b1) b1.className = 'memory-block corrupted';
+                        if (b2) b2.className = 'memory-block corrupted';
+                    }, 500);
+                    break;
+            }
         }
 
-        setInterval(updateTimer, 1000);
-
-        async function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
+        function nextScene() {
+            if (currentScene < totalScenes) {
+                currentScene++;
+                showScene(currentScene);
+            }
         }
 
-        async function runSimulation() {
-            // Scene 1
-            log('Starting Lab Environment Setup...', 'info');
-            await sleep(1000);
-            log('Initializing Attacker Machine...', 'info');
-            await sleep(1000);
-            log('Starting Mock Theme Server on port 8000...', 'warning');
-            await sleep(1500);
-            log('Server listening. Upload directory created: /app/themes/', 'success');
-            await sleep(2000);
-
-            // Scene 2
-            switchScene(2);
-            log('Generating malicious payload...', 'info');
-            await sleep(1000);
-            log('Running exploit_gen.py', 'info');
-            await sleep(1000);
-            log('Adding normal file: normal_image.png', 'info');
-            await sleep(1000);
-            log('INJECTING PATH TRAVERSAL STRING: ../../../../../../../sdcard/Download/hacked.txt', 'error');
-            const payloadVisual = document.getElementById('s2-payload');
-            payloadVisual.style.transform = 'scale(1.05)';
-            payloadVisual.style.boxShadow = '0 0 15px #f07178';
-            await sleep(1500);
-            log('Payload generated successfully: malicious_theme.mtz', 'success');
-            await sleep(2500);
-
-            // Scene 3
-            switchScene(3);
-            log('Initiating attack simulation...', 'warning');
-            await sleep(1000);
-            log('Sending POST request with malicious_theme.mtz to /api/theme/upload', 'warning');
-
-            const packet = document.getElementById('s3-packet');
-            packet.style.display = 'block';
-            packet.style.transition = 'left 2s linear';
-            await sleep(100);
-            packet.style.left = '400px'; // Move towards server
-
-            await sleep(2000);
-            packet.style.display = 'none';
-            log('Server received payload. Triggering upload handler...', 'warning');
-            await sleep(2000);
-
-            // Scene 4
-            switchScene(4);
-            log('Server parsing ZIP entries...', 'info');
-            await sleep(1000);
-            log('Extracting: normal_image.png -> /app/themes/normal_image.png', 'success');
-            await sleep(1500);
-            log('Extracting malicious entry...', 'error');
-
-            const pathText = document.getElementById('s4-path-text');
-            await sleep(500);
-            pathText.innerHTML = '/app/themes/ <span class="red-text">../../../../../../../sdcard/Download/hacked.txt</span>';
-            await sleep(1500);
-            log('Resolving path...', 'warning');
-            pathText.innerHTML = '<span class="red-text">/sdcard/Download/hacked.txt</span>';
-            pathText.style.fontSize = '1.8rem';
-            pathText.style.textShadow = '0 0 15px #f07178';
-            await sleep(1000);
-
-            log('CRITICAL: Sandbox escape successful!', 'error');
-            log('Arbitrary file write triggered at /sdcard/Download/hacked.txt', 'error');
-            await sleep(3000);
-
-            // Scene 5
-            switchScene(5);
-            log('Loading remediation & mitigation strategies...', 'info');
-            await sleep(1000);
-            log('Comparing vulnerable extraction logic with secure canonicalization...', 'info');
-            await sleep(2000);
-            log('Secure logic uses os.path.abspath() to resolve the absolute target path.', 'success');
-            await sleep(2000);
-            log('It then validates if the resolved path starts with the intended base directory.', 'success');
-            await sleep(2000);
-            log('Simulation complete.', 'success');
-
-            // Allow the final scene to be read
-            await sleep(5000);
-
-            // Loop or end
-            log('Restarting simulation in 5 seconds...', 'info');
-            await sleep(5000);
-            location.reload();
+        function previousScene() {
+            if (currentScene > 1) {
+                currentScene--;
+                showScene(currentScene);
+            }
         }
 
-        // Start
-        window.onload = () => {
-            runSimulation();
-        };
+        function startSimulation() {
+            if (isPlaying) {
+                clearInterval(autoPlayInterval);
+                isPlaying = false;
+                document.querySelector('.btn-primary').innerHTML = '▶ Simülasyonu Başlat';
+            } else {
+                isPlaying = true;
+                document.querySelector('.btn-primary').innerHTML = '⏸ Simülasyonu Duraklat';
+                
+                autoPlayInterval = setInterval(() => {
+                    if (currentScene < totalScenes) {
+                        nextScene();
+                    } else {
+                        clearInterval(autoPlayInterval);
+                        isPlaying = false;
+                        document.querySelector('.btn-primary').innerHTML = '▶ Simülasyonu Başlat';
+                    }
+                }, 5000); // 5 saniyelik okuma/geçiş süresi
+            }
+        }
+
+        function resetSimulation() {
+            clearInterval(autoPlayInterval);
+            isPlaying = false;
+            currentScene = 1;
+            
+            const b1 = document.getElementById('bufferBlock4');
+            const b2 = document.getElementById('aiBlock4');
+            if (b1) b1.className = 'memory-block';
+            if (b2) b2.className = 'memory-block';
+            
+            document.querySelectorAll('.timeline-item').forEach(item => item.classList.remove('active'));
+            document.querySelector('.btn-primary').innerHTML = '▶ Simülasyonu Başlat';
+            showScene(1);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': previousScene(); break;
+                case 'ArrowRight': nextScene(); break;
+                case ' ': e.preventDefault(); startSimulation(); break;
+                case 'r': case 'R': resetSimulation(); break;
+            }
+        });
+
     </script>
 </body>
-
 </html>
