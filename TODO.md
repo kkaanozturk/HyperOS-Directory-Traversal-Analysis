@@ -11,9 +11,9 @@
 
 ### Documentation
 - [x] Rewrite README.md for CVE-2025-21082 focus
-- [x] Update analysis.md with UAF vulnerability details
-- [x] Revise architecture.md for HyperOS AVCodec framework
-- [x] Rewrite mitigation.md with memory safety strategies
+- [x] Update zafiyet-analizi.md with UAF vulnerability details
+- [x] Revise mimari-analiz.md for HyperOS AVCodec framework
+- [x] Rewrite cozum-onerileri.md with memory safety strategies
 - [x] Update docs/README.md with new navigation structure
 
 ### Project Structure
@@ -50,7 +50,7 @@
   - [ ] Memory address tracking and corruption display
 
 #### Documentation Enhancement
-- [ ] Add Mermaid diagrams to architecture.md
+- [ ] Add Mermaid diagrams to mimari-analiz.md
 - [ ] Include code examples in all documentation
 - [ ] Add cross-references between documents
 - [ ] Create quick-start guide for researchers
