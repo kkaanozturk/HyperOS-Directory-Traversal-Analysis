@@ -1,0 +1,29 @@
+name: Rust CI (PoC Security Check)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  check-and-test:
+    name: Build & Test PoC
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Stable Rust Toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Run Cargo Check
+      run: |
+        cd poc_rust
+        cargo check --verbose
+
+    - name: Run PoC Tests
+      run: |
+        cd poc_rust
+        cargo test --verbose
