@@ -198,7 +198,6 @@ python exploit.py -u http://hedef:5000 -f etc/shadow
 | 📊 [Zafiyet Analizi](docs/analysis.md) | CVE-2025-21082 teknik analizi, CVSS skorlaması, saldırı senaryoları, HyperOS vs AOSP karşılaştırması |
 | 🏗️ [Mimari Şeması](docs/architecture.md) | AVCodec async pipeline, bileşen diyagramları, race condition akış şeması |
 | 🛡️ [Çözüm Önerileri](docs/mitigation.md) | Zafiyetli/yamalı C++ kod örnekleri, RAII pattern, MTE, CFI, ASan entegrasyonu |
-| 📘 [Kullanım Talimatları](kullanmatalimatlari.md) | Adım adım kurulum ve çalıştırma rehberi |
 
 ---
 
