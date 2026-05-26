@@ -15,6 +15,9 @@ struct CodecContext {
     magic: u32, // Magic number to detect corruption
 }
 
+// Thread safety için Send trait'ini implement ediyoruz (unsafe)
+unsafe impl Send for CodecContext {}
+
 impl CodecContext {
     fn new() -> Self {
         let buffer = vec![0u8; 1024];
@@ -92,15 +95,14 @@ fn vulnerable_scenario(verbose: bool) {
     
     unsafe {
         // Allocate codec context on heap
-        let codec_ptr = Box::into_raw(Box::new(CodecContext::new()));
+        let codec = Arc::new(Mutex::new(CodecContext::new()));
         
         if verbose {
-            println!("CodecContext allocated at: {:p}", codec_ptr);
+            println!("CodecContext allocated in Arc<Mutex<T>>");
         }
 
-        // Shared pointer for worker thread
-        let shared_ptr = Arc::new(Mutex::new(codec_ptr));
-        let worker_ptr = Arc::clone(&shared_ptr);
+        // Clone Arc for worker thread
+        let worker_codec = Arc::clone(&codec);
 
         println!("{} Starting worker thread...", "🧵".bright_blue());
         
@@ -108,47 +110,31 @@ fn vulnerable_scenario(verbose: bool) {
         let worker_handle = thread::spawn(move || {
             thread::sleep(Duration::from_millis(100)); // Simulate async work
             
-            let ptr_guard = worker_ptr.lock().unwrap();
-            let codec_ptr = *ptr_guard;
+            println!("{} Worker thread accessing codec context...", "🔄".bright_green());
             
-            if !codec_ptr.is_null() {
-                println!("{} Worker thread accessing codec context...", "🔄".bright_green());
-                
-                // This is the UAF - accessing freed memory
-                let mut codec = &mut *codec_ptr;
-                
-                // Try to process frame on potentially freed memory
-                for i in 0..5 {
-                    if !codec.process_frame() {
-                        println!("{} UAF vulnerability triggered on frame {}!", "💥".bright_red(), i);
-                        break;
-                    }
-                    thread::sleep(Duration::from_millis(50));
+            // Try to process frame on potentially freed memory
+            for i in 0..5 {
+                let mut codec_guard = worker_codec.lock().unwrap();
+                if !codec_guard.process_frame() {
+                    println!("{} UAF vulnerability triggered on frame {}!", "💥".bright_red(), i);
+                    break;
                 }
+                drop(codec_guard); // Release lock
+                thread::sleep(Duration::from_millis(50));
             }
         });
 
-        // Simulate race condition - release codec while worker is using it
+        // Simulate race condition - corrupt codec while worker is using it
         thread::sleep(Duration::from_millis(50));
         
         println!("{} Main thread releasing codec context (UAF trigger)...", "🗑️".bright_red());
         
         {
-            let ptr_guard = shared_ptr.lock().unwrap();
-            let codec_ptr = *ptr_guard;
-            if !codec_ptr.is_null() {
-                (*codec_ptr).release();
-                
-                // Simulate heap reclamation with different data
-                let corrupted_data = Box::new([0xAA, 0xBB, 0xCC, 0xDD]);
-                let corrupted_ptr = Box::into_raw(corrupted_data) as *mut CodecContext;
-                
-                if verbose {
-                    println!("Memory reclaimed with corrupted data at: {:p}", corrupted_ptr);
-                }
-                
-                // Free the original context
-                let _ = Box::from_raw(codec_ptr);
+            let mut codec_guard = codec.lock().unwrap();
+            codec_guard.release();
+            
+            if verbose {
+                println!("Memory corrupted to simulate UAF");
             }
         }
 
@@ -164,16 +150,15 @@ fn patched_scenario(verbose: bool) {
     println!("{} Running patched scenario...", "✅".bright_green());
     
     unsafe {
-        // Allocate codec context on heap
-        let codec_ptr = Box::into_raw(Box::new(CodecContext::new()));
+        // Allocate codec context safely in Arc<Mutex<T>>
+        let codec = Arc::new(Mutex::new(CodecContext::new()));
         
         if verbose {
-            println!("CodecContext allocated at: {:p}", codec_ptr);
+            println!("CodecContext allocated safely in Arc<Mutex<T>>");
         }
 
-        // Shared pointer for worker thread
-        let shared_ptr = Arc::new(Mutex::new(codec_ptr));
-        let worker_ptr = Arc::clone(&shared_ptr);
+        // Clone Arc for worker thread
+        let worker_codec = Arc::clone(&codec);
 
         println!("{} Starting worker thread...", "🧵".bright_blue());
         
@@ -181,26 +166,21 @@ fn patched_scenario(verbose: bool) {
         let worker_handle = thread::spawn(move || {
             thread::sleep(Duration::from_millis(100));
             
-            let ptr_guard = worker_ptr.lock().unwrap();
-            let codec_ptr = *ptr_guard;
+            println!("{} Worker thread processing frames safely...", "🔄".bright_green());
             
-            if !codec_ptr.is_null() {
-                println!("{} Worker thread processing frames safely...", "🔄".bright_green());
-                
-                let mut codec = &mut *codec_ptr;
-                
-                // Process frames safely
-                for i in 0..5 {
-                    if !codec.process_frame() {
-                        println!("{} Unexpected error on frame {}", "❌".bright_red(), i);
-                        break;
-                    }
-                    println!("{} Frame {} processed successfully", "✅".bright_green(), i);
-                    thread::sleep(Duration::from_millis(50));
+            // Process frames safely
+            for i in 0..5 {
+                let mut codec_guard = worker_codec.lock().unwrap();
+                if !codec_guard.process_frame() {
+                    println!("{} Unexpected error on frame {}", "❌".bright_red(), i);
+                    break;
                 }
-                
-                println!("{} Worker thread completed safely", "✅".bright_green());
+                println!("{} Frame {} processed successfully", "✅".bright_green(), i);
+                drop(codec_guard); // Release lock
+                thread::sleep(Duration::from_millis(50));
             }
+            
+            println!("{} Worker thread completed safely", "✅".bright_green());
         });
 
         // PATCH: Wait for worker thread to complete before releasing
@@ -210,15 +190,11 @@ fn patched_scenario(verbose: bool) {
         // Now safely release the codec context
         println!("{} Safely releasing codec context...", "🗑️".bright_green());
         {
-            let ptr_guard = shared_ptr.lock().unwrap();
-            let codec_ptr = *ptr_guard;
-            if !codec_ptr.is_null() {
-                (*codec_ptr).release();
-                let _ = Box::from_raw(codec_ptr);
-                
-                if verbose {
-                    println!("CodecContext safely freed");
-                }
+            let mut codec_guard = codec.lock().unwrap();
+            codec_guard.release();
+            
+            if verbose {
+                println!("CodecContext safely freed");
             }
         }
         
