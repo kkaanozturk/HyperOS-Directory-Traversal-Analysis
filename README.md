@@ -1,3 +1,4 @@
+
 <div align="center">
 
 # 🔬 CVE-2025-21082: HyperOS AVCodec Use-After-Free
@@ -14,7 +15,10 @@
 
 ---
 
-<!-- GIF ALANI — Buraya demo GIF'inizi veya videonuzu ekleyin -->
+🌐 **[Canlı Simülasyonu Tarayıcıda Deneyimleyin](https://kkaanozturk.github.io/HyperOS-Directory-Traversal-Analysis/simulation.html)**
+
+---
+
 <video src="demo/project-demo.webm" width="800" controls></video>
 
 ---
@@ -23,40 +27,56 @@
 
 ## 📖 Proje Hakkında
 
-Bu repository, Xiaomi **HyperOS AVCodec** medya işleme framework'ünde tespit edilen kritik bir **Use-After-Free (UAF)** zafiyeti olan **CVE-2025-21082**'nin derinlemesine teknik analizini, saldırı mekanizmasının simülasyonunu ve çözüm önerilerini içermektedir.
+Bu repository, Xiaomi **HyperOS AVCodec** medya işleme framework'ünde tespit edilen kritik bir **Use-After-Free (UAF)** zafiyeti olan **CVE-2025-21082**'nin derinlemesine teknik analizini, saldırı mekanizmasının simülasyonunu ve çözüm önerilerini içmektedir.
 
 Zafiyetin temel sebebi, AVCodec'in asenkron callback mekanizmasında codec context'inin, worker thread'ler hâlâ çalışırken serbest bırakılmasıdır. Bu durum klasik bir **Use-After-Free race condition**'a yol açmakta ve teorik olarak **Uzaktan Kod Çalıştırma (RCE)** imkânı sunmaktadır.
 
-Proje; Rust ile yazılmış güvenli bir UAF simülasyonu, kapsamlı teknik dokümantasyon ve tarayıcı tabanlı interaktif bir görselleştirme içermektedir.
+Proje; Rust ile yazılmış güvenli bir UAF simülasyonu, kapsamlı teknik dokümantasyon, GitHub Actions CI boru hattı otomasyonu ve tarayıcı tabanlı interaktif bir görselleştirme içermektedir.
 
 ---
 
 ## 📂 Depo Yapısı
 
+
 ```
+
 HyperOS-Directory-Traversal-Analysis/
 │
-├── 📁 docs/                        # Teknik dokümantasyon
-│   ├── zafiyet-analizi.md          # Zafiyet analizi ve CVSS skorlaması
-│   ├── mimari-analiz.md            # HyperOS AVCodec mimari şeması
-│   ├── cozum-onerileri.md          # Çözüm önerileri ve yamalar
-│   └── README.md                   # Dokümantasyon rehberi
+├── 📁 .github/                     # GitHub topluluk ve CI/CD iş akışları
+│   ├── 📁 ISSUE_TEMPLATE/          # Hata ve özellik talep şablonları
+│   └── 📁 workflows/
+│       └── 📄 rust.yml             # Otomatik test ve derleme boru hattı (CI)
 │
-├── 📁 poc_python/                  # Python analiz araçları (eski Directory Traversal PoC - korundu)
-│   ├── exploit.py                  # CVE-2025-2844 Directory Traversal PoC
-│   └── requirements.txt
+├── 📁 assets/                      # Görsel analiz dokümanları
+│   └── 🌐 infographic.html         # Görsel zafiyet şeması
 │
-├── 📁 poc_rust/                    # Rust UAF simülasyonu (ana PoC)
-│   ├── Cargo.toml
-│   └── src/
-│       └── main.rs                 # Unsafe Rust ile UAF simülasyonu
+├── 📁 docs/                        # Teknik raporlar ve süreç takibi
+│   ├── 📄 zafiyet-analizi.md       # Zafiyet analizi ve CVSS skorlaması
+│   ├── 📄 mimari-analiz.md         # HyperOS AVCodec mimari şeması
+│   ├── 📄 cozum-onerileri.md       # Çözüm önerileri ve C++ yamaları
+│   ├── 📄 plan.md                  # Proje zaman çizelgesi (Süreç Notu)
+│   ├── 📄 SORULAR.md               # Süreç notları ve teknik sorular
+│   ├── 📄 simple.md                # Taslak çalışma notları
+│   └── 📄 README.md                # Dokümantasyon rehber indeksi
 │
-├── 🌐 simulation.html              # İnteraktif web simülasyonu (5 sahne)
-├── 📄 README.md                    # Bu dosya
-├── 📋 plan.md                      # Proje zaman çizelgesi
-├── ✅ TODO.md                      # Görev takip listesi
-├── 📘 kullanmatalimatlari.md       # Adım adım kullanım rehberi
-└── ⚖️  LICENSE                     # MIT Lisansı
+├── 📁 poc_python/                  # Python analiz araçları
+│   ├── 📄 exploit.py               # CVE-2025-2844 Directory Traversal (Referans PoC)
+│   └── 📄 requirements.txt         # Gerekli kütüphaneler
+│
+├── 📁 poc_rust/                    # Rust UAF simülasyonu (Ana PoC)
+│   ├── 📁 src/
+│   │   └── 📄 main.rs              # Unsafe Rust ile UAF simülasyon mantığı
+│   ├── 📄 Cargo.toml
+│   └── 📄 Cargo.lock
+│
+├── 🌐 simulation.html              # İnteraktif web simülasyon paneli (GitHub Pages)
+├── 📄 README.md                    # Bu dosya (Ana Vitrin)
+├── 📄 SECURITY.md                  # Güvenlik Politikası ve Sorumlu Açıklama Kuralları
+├── 📄 CODE_OF_CONDUCT.md           # Evrensel Topluluk Davranış Kuralları
+├── 📄 CONTRIBUTING.md              # Açık Kaynak Katkıda Bulunma Rehberi
+├── 📋 TODO.md                      # Aktif görev takip listesi
+└── ⚖️ LICENSE                       # MIT Lisans Dosyası
+
 ```
 
 ---
@@ -76,12 +96,15 @@ HyperOS-Directory-Traversal-Analysis/
 
 ### Zafiyetin Özü
 
+
 ```
-[Ana Thread]  processFrameAsync() → Worker thread başlatılır
-                    ↓
-              release() çağrılır → Bellek SERBEST BIRAKILIR ⚠️
-                    ↓
+
+[Ana Thread]   processFrameAsync() → Worker thread başlatılır
+↓
+release() çağrılır → Bellek SERBEST BIRAKILIR ⚠️
+↓
 [Worker Thread]  Serbest bırakılan belleğe erişmeye devam eder → UAF 💥
+
 ```
 
 ---
@@ -110,24 +133,27 @@ Projenin derlenmesini, çalıştırılmasını ve Use-After-Free simülasyon ç�
 
 ```bash
 # Projeyi klonlayın
-git clone https://github.com/kullanici/HyperOS-Directory-Traversal-Analysis.git
+git clone [https://github.com/kkaanozturk/HyperOS-Directory-Traversal-Analysis.git](https://github.com/kkaanozturk/HyperOS-Directory-Traversal-Analysis.git)
 cd HyperOS-Directory-Traversal-Analysis/poc_rust
 
 # Release modunda derleyin
 cargo build --release
+
 ```
 
 #### 🔴 Zafiyetli Senaryo (Race Condition & UAF Gösterimi)
 
 ```bash
 # Windows
-.\target\release\cve_2025_21082_uaf_poc.exe --mode vulnerable --verbose
+.\target\release\poc_rust.exe --mode vulnerable --verbose
 
 # Linux / macOS
-./target/release/cve_2025_21082_uaf_poc --mode vulnerable --verbose
+./target/release/poc_rust --mode vulnerable --verbose
+
 ```
 
 **Beklenen Çıktı:**
+
 ```
 🔬 CVE-2025-21082: HyperOS AVCodec UAF PoC
 Mode: vulnerable
@@ -136,24 +162,27 @@ Mode: vulnerable
 🧵 Starting worker thread...
 🗑️  Main thread releasing codec context (UAF trigger)...
 🔄 Worker thread accessing codec context...
-🚨 UAF detected! Magic number corrupted: 0xFEEDFACE
+🚨 UAF tespit edildi! Magic: 0xDEADBEEF
 💥 UAF vulnerability triggered on frame 0!
 
 🚨 Vulnerable scenario completed - UAF demonstrated!
 ⚠️  In a real exploit, this could lead to RCE
+
 ```
 
 #### 🟢 Yamalanmış Senaryo (Güvenli Senkronizasyon)
 
 ```bash
 # Windows
-.\target\release\cve_2025_21082_uaf_poc.exe --mode patched --verbose
+.\target\release\poc_rust.exe --mode patched --verbose
 
 # Linux / macOS
-./target/release/cve_2025_21082_uaf_poc --mode patched --verbose
+./target/release/poc_rust --mode patched --verbose
+
 ```
 
 **Beklenen Çıktı:**
+
 ```
 🔬 CVE-2025-21082: HyperOS AVCodec UAF PoC
 Mode: patched
@@ -168,19 +197,25 @@ Mode: patched
 
 ✅ Patched scenario completed - No UAF occurred!
 🛡️  Proper synchronization prevents the vulnerability
+
 ```
 
 ### 2. İnteraktif Web Simülasyonu
 
+Yerel sunucu kurmakla uğraşmak istemiyorsanız doğrudan internet üzerinden **[GitHub Pages Canlı Önizleme](https://www.google.com/url?sa=E&source=gmail&q=https://kkaanozturk.github.io/HyperOS-Directory-Traversal-Analysis/simulation.html)** linkine tıklayarak simülasyonu tarayıcınızda deneyimleyebilirsiniz.
+
+Yerel olarak çalıştırmak isterseniz:
+
 ```bash
 # Proje kök dizininde basit bir HTTP sunucusu başlatın
-py -m http.server 8000
+python -m http.server 8000
 
-# Tarayıcınızda açın
-# http://localhost:8000/simulation.html
+# Tarayıcınızda açın: http://localhost:8000/simulation.html
+
 ```
 
 Simülasyon **5 sahne** içermektedir:
+
 1. 🧪 **Lab Ortamı** — AVCodec pipeline tanıtımı
 2. 🏗️ **Context Oluşturma** — Heap bellek düzeni
 3. ⚡ **Race Condition** — Zaman çizelgesi ve zafiyet penceresi
@@ -189,13 +224,13 @@ Simülasyon **5 sahne** içermektedir:
 
 ### 3. Python Analiz Araçları (Eski PoC - Referans Amaçlı)
 
-> **Not**: Bu klasör, projenin orijinal CVE-2025-2844 (Directory Traversal) versiyonundan korunmuştur. 
-> Mevcut CVE-2025-21082 (UAF) çalışması için Rust PoC'yi kullanın.
+> **Önemli Not**: Bu klasör, projenin orijinal CVE-2025-2844 (Directory Traversal) versiyonundan teknik tarihçe ve hibrit araştırma referansı olması adına korunmuştur. Mevcut ana çalışma olan CVE-2025-21082 (UAF) analizi için yukarıdaki Rust PoC'yi kullanın.
 
 ```bash
 cd poc_python
-py -m pip install -r requirements.txt
-py exploit.py -u http://hedef:5000 -f etc/shadow
+python -m pip install -r requirements.txt
+python exploit.py -u http://hedef:5000 -f etc/shadow
+
 ```
 
 ---
@@ -203,11 +238,12 @@ py exploit.py -u http://hedef:5000 -f etc/shadow
 ## 📚 Teknik Dokümantasyon
 
 | Doküman | İçerik |
-| :--- | :--- |
-| 📊 [Zafiyet Analizi](docs/zafiyet-analizi.md) | CVE-2025-21082 teknik analizi, CVSS skorlaması, saldırı senaryoları, HyperOS vs AOSP karşılaştırması |
-| 🏗️ [Mimari Şeması](docs/mimari-analiz.md) | AVCodec async pipeline, bileşen diyagramları, race condition akış şeması |
-| 🛡️ [Çözüm Önerileri](docs/cozum-onerileri.md) | Zafiyetli/yamalı C++ kod örnekleri, RAII pattern, MTE, CFI, ASan entegrasyonu |
-| 📘 [Kullanım Talimatları](kullanmatalimatlari.md) | Adım adım kurulum ve çalıştırma rehberi |
+| --- | --- |
+| 📊 [Zafiyet Analizi](https://www.google.com/search?q=docs/zafiyet-analizi.md) | CVE-2025-21082 teknik analizi, CVSS skorlaması, saldırı senaryoları, HyperOS vs AOSP karşılaştırması |
+| 🏗️ [Mimari Şeması](https://www.google.com/search?q=docs/mimari-analiz.md) | AVCodec async pipeline, bileşen diyagramları, race condition akış şeması |
+| 🛡️ [Çözüm Önerileri](https://www.google.com/search?q=docs/cozum-onerileri.md) | Zafiyetli/yamalı C++ kod örnekleri, RAII pattern, MTE, CFI, ASan entegrasyonu |
+| 📋 [Süreç Takip Belgeleri](https://www.google.com/search?q=docs/README.md) | `plan.md`, `SORULAR.md` ve `simple.md` gibi geliştirme aşaması notlarının indeksi |
+
 ---
 
 ## 🔬 Teknik Detaylar
@@ -228,6 +264,7 @@ class AVCodecContext {
         buffer_ = nullptr;
     }
 };
+
 ```
 
 ### Yamalı Kod Paterni (C++)
@@ -245,13 +282,14 @@ class AVCodecContext {
         delete buffer_; // ✅ Güvenli temizlik
     }
 };
+
 ```
 
 ### Rust Simülasyonu — UAF Tespiti
 
 ```rust
 unsafe fn process_frame(&mut self) -> bool {
-    // Magic number bozulduysa UAF gerçekleşmiş demektir
+    // Magic number bozulduysa veya değiştiyse UAF gerçekleşmiş demektir
     if self.magic != 0xDEADBEEF {
         println!("🚨 UAF tespit edildi! Magic: 0x{:08X}", self.magic);
         return false;
@@ -259,6 +297,7 @@ unsafe fn process_frame(&mut self) -> bool {
     self.frame_counter += 1;
     true
 }
+
 ```
 
 ---
@@ -266,7 +305,7 @@ unsafe fn process_frame(&mut self) -> bool {
 ## 🛡️ Savunma Stratejileri
 
 | Yöntem | Açıklama | Etkinlik |
-| :--- | :--- | :---: |
+| --- | --- | --- |
 | **Thread Senkronizasyonu** | `join()` ile thread tamamlanana kadar bekleme | ⭐⭐⭐⭐⭐ |
 | **Referans Sayımı** | `shared_ptr` ile otomatik yaşam süresi yönetimi | ⭐⭐⭐⭐⭐ |
 | **RAII Pattern** | Destructor ile otomatik kaynak temizliği | ⭐⭐⭐⭐ |
@@ -279,19 +318,15 @@ unsafe fn process_frame(&mut self) -> bool {
 ## ⚠️ Yasal Uyarı
 
 > **Bu proje yalnızca eğitim ve akademik araştırma amacıyla geliştirilmiştir.**
->
 > Rust simülasyonu, zafiyetin mekanizmasını göstermek için tasarlanmış olup gerçek bir exploit **değildir**. Buradaki bilgilerin ve araçların yetkisiz sistemler üzerinde kullanılması yasal sorumluluk doğurabilir. Geliştirici hiçbir sorumluluk kabul etmez.
 
 ---
 
 ## 📄 Lisans
 
-Bu proje **MIT Lisansı** ile lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakınız.
+Bu proje **MIT Lisansı** ile lisanslanmıştır. Detaylar için [LICENSE](https://www.google.com/search?q=LICENSE) dosyasına bakınız.
 
 ---
 
-<div align="center">
-
 *Siber güvenlik araştırması — Eğitim amaçlı hazırlanmıştır*
 
-</div>
