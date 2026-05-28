@@ -114,10 +114,8 @@ release() çağrılır → Bellek SERBEST BIRAKILIR ⚠️
 Projenin derlenmesini, çalıştırılmasını ve Use-After-Free simülasyon çıktısını gösteren ekran kaydını aşağıdan izleyebilirsiniz:
 
 <div align="center">
-  <video src="demo/project-demo.webm" width="800" controls></video>
+  <img src="https://github.com/user-attachments/assets/9553a67a-05e5-4d37-b218-1a5ab239c3f7" width="800">
 </div>
-
-> 💡 Video yüklenemiyorsa `demo/project-demo.webm` dosyasını indirip yerel olarak oynatabilirsiniz.
 
 ---
 
